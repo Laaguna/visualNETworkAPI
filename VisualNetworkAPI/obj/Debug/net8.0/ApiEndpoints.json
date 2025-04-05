@@ -1,0 +1,76 @@
+[
+  {
+    "ContainingType": "VisualNetworkAPI.Controllers.AccessController",
+    "Method": "Login",
+    "RelativePath": "api/Access/login",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "loginObject",
+        "Type": "VisualNetworkAPI.Models.DTOs.LoginDTO",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "VisualNetworkAPI.Controllers.AccessController",
+    "Method": "Logout",
+    "RelativePath": "api/Access/logout",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "refreshToken",
+        "Type": "System.String",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "VisualNetworkAPI.Controllers.AccessController",
+    "Method": "RefreshToken",
+    "RelativePath": "api/Access/refresh-token",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "refreshToken",
+        "Type": "System.String",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "VisualNetworkAPI.Controllers.AccessController",
+    "Method": "Register",
+    "RelativePath": "api/Access/register",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "objeto",
+        "Type": "VisualNetworkAPI.Models.DTOs.UserDTO",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "VisualNetworkAPI.Controllers.UserController",
+    "Method": "GetAllUsers",
+    "RelativePath": "api/User/users",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  }
+]
