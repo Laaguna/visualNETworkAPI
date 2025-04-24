@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Identity.Client;
 using VisualNetworkAPI.Models;
+using VisualNetworkAPI.Models.DTOs.Comments;
 
 namespace VisualNetworkAPI.Controllers
 {
@@ -19,6 +20,12 @@ namespace VisualNetworkAPI.Controllers
     {
       _context = context;
     }
+
+    // GetAllPosts
+    // GetPostById
+    // CreatePost
+    // UpdatePost
+    // DeletePost
 
     [HttpGet]
     public async Task<IActionResult> GetAllPosts()
@@ -89,34 +96,84 @@ namespace VisualNetworkAPI.Controllers
       return NoContent();
     }
 
-      // TODO: 
-      // GetAllPosts
-      // GetPostById
-      // CreatePost
-      // UpdatePost
-      // DeletePost
+    // GetAllPostComments
+    // CreatePostComment
+    // UpdatePostComment
+    // DeletePostComment
 
-      // TODO: Anexos de post --Comments 
-      // TODO: DTOs CreatePostComment, GetComments
-      // GetAllPostComments
-      // CreatePostComment
-      // UpdatePostComment
-      // DeletePostComment
+    // GET: api/Post/{postId}/comments
+    [HttpGet("{postId}/comments")]
+    public async Task<IActionResult> GetAllPostComments(int postId)
+    {
+      var postExist = await _context.Posts.FindAsync(postId);
+      if (postExist == null) return NotFound(new { message = "Post no encontrado" });
 
-      // TODO: --Reactions
-      // GetAllPostReactions
-      // CreatePostReaction
-      // DeletePostReaction
+      var comments = await _context.Comments
+      .Where(c => c.PostId == postId)
+                .Select(c => new GetCommentDTO
+                {
+                  Id = c.Id,
+                  Description = c.Description,
+                  CreatedBy = c.CreatedBy,
+                  CreatedDate = c.CreatedDate,
+                  LastUpdate = c.LastUpdate
+                })
+                .ToListAsync();
 
-      // TODO: Tags
-      // TODO: DTOs CreatePostTag, GetPostTags
-      // GetAllPostTags
-      // CreatePostTag
-      // DeletePostTag
-
-      //TODO: Boards
-      // GetAllBoards of a  post
-
-
+      return Ok(new { data = comments });
     }
+
+    // POST: api/Post/{postId}/comments
+    [HttpPost("{postId}/comments")]
+    public async Task<IActionResult> CreatePostComment(int postId, [FromBody] CreatePostCommentDTO commentDto)
+    {
+      if (!ModelState.IsValid) return BadRequest(ModelState);
+
+      var postExists = await _context.Posts.AnyAsync(p => p.Id == postId);
+      if (!postExists)return NotFound(new { message = "Publicación no encontrada" });
+      
+
+      var newComment = new Comment
+      {
+        PostId = postId,
+        Description = commentDto.Description,
+        //CreatedBy = GetLoggedInUsername(), 
+        CreatedDate = DateTime.UtcNow,
+        LastUpdate = DateTime.UtcNow
+      };
+
+      _context.Comments.Add(newComment);
+      await _context.SaveChangesAsync();
+
+      var createdCommentDto = new GetCommentDTO
+      {
+        Id = newComment.Id,
+        Description = newComment.Description,
+        //CreatedBy = newComment.CreatedBy,
+        CreatedDate = newComment.CreatedDate,
+        LastUpdate = newComment.LastUpdate
+      };
+
+      return CreatedAtAction(nameof(GetAllPostComments), new { postId = postId }, new { data = createdCommentDto });
+    }
+
+
+
+
+    // TODO: --Reactions
+    // GetAllPostReactions
+    // CreatePostReaction
+    // DeletePostReaction
+
+    // TODO: Tags
+    // TODO: DTOs CreatePostTag, GetPostTags
+    // GetAllPostTags
+    // CreatePostTag
+    // DeletePostTag
+
+    //TODO: Boards
+    // GetAllBoards of a  post
+
+
+  }
 }
