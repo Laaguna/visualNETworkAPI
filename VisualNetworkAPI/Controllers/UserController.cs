@@ -18,7 +18,6 @@ namespace VisualNetworkAPI.Controllers
     }
 
     [HttpGet]
-    [Route("users")]
     public async Task<IActionResult> GetAllUsers()
     {
       var users = await _context.Users.ToListAsync();
@@ -43,8 +42,7 @@ namespace VisualNetworkAPI.Controllers
       return StatusCode(StatusCodes.Status200OK, new { data = publicUsers });
     }
 
-    [HttpGet]
-    [Route("users/{id}")]
+    [HttpGet("{id}")]
     public async Task<IActionResult> GetUser(int id)
     {
       var user = await _context.Users.FindAsync(id);
@@ -74,8 +72,7 @@ namespace VisualNetworkAPI.Controllers
       return Ok(new { data = publicUser });
     }
 
-    [HttpGet]
-    [Route("users/{id}/followers")]
+    [HttpGet("{id}/followers")]
     public async Task<IActionResult> GetUserFollowers(int id)
     {
       var userExists = await _context.Users.AnyAsync(u => u.Id == id);
@@ -124,8 +121,7 @@ namespace VisualNetworkAPI.Controllers
       return Ok(new { data = followersData });
     }
 
-    [HttpGet]
-    [Route("users/{id}/following")]
+    [HttpGet("{id}/following")]
     public async Task<IActionResult> GetUserFollowing(int id)
     {
       var userExists = await _context.Users.AnyAsync(u => u.Id == id);
@@ -174,8 +170,7 @@ namespace VisualNetworkAPI.Controllers
       return Ok(new { data = followingData });
     }
 
-    [HttpGet]
-    [Route("users/{id}/liked-posts")]
+    [HttpGet("{id}/liked-posts")]
     public async Task<IActionResult> GetUserLikedPosts(int id)
     {
       var userExists = await _context.Users.AnyAsync(u => u.Id == id);
@@ -220,8 +215,7 @@ namespace VisualNetworkAPI.Controllers
       return Ok(new { data = likedPostsData });
     }
 
-    [HttpPut]
-    [Route("users/{id}")]
+    [HttpPut("{id}")]
     public async Task<IActionResult> UpdateUser(int id, [FromBody] User user)
     {
       if (!ModelState.IsValid)
@@ -266,8 +260,7 @@ namespace VisualNetworkAPI.Controllers
       return Ok(new { data = publicUser });
     }
 
-    [HttpDelete]
-    [Route("users/{id}")]
+    [HttpDelete("{id}")]
     public async Task<IActionResult> DeactivateUser(int id)
     {
       var userToDeactivate = await _context.Users.FindAsync(id);

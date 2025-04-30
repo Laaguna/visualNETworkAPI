@@ -238,6 +238,27 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "VisualNetworkAPI.Controllers.PostController",
+    "Method": "CreatePostComment",
+    "RelativePath": "api/Post/{postId}/comments",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "postId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      },
+      {
+        "Name": "commentDto",
+        "Type": "VisualNetworkAPI.Models.DTOs.Comments.CreatePostCommentDTO",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "VisualNetworkAPI.Controllers.UserController",
     "Method": "GetAllUsers",
     "RelativePath": "api/User/users",

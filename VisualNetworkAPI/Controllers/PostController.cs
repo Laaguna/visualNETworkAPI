@@ -12,13 +12,23 @@ namespace VisualNetworkAPI.Controllers
   [Authorize]
   [ApiController]
 
-  public class PostController : ControllerBase
+  public class PostController : BaseUserController
   {
     private readonly VisualNetworkContext _context;
 
-    public PostController(VisualNetworkContext context)
+    public PostController(VisualNetworkContext context) : base()
     {
       _context = context;
+    }
+
+    private int? GetLoggedInUserId()
+    {
+      return base.GetLoggedInUserId();
+    }
+
+    private string? GetLoggedInUsername()
+    {
+      return base.GetLoggedInUsername();
     }
 
     // GetAllPosts
@@ -52,6 +62,7 @@ namespace VisualNetworkAPI.Controllers
       }
 
       post.CreatedDate = DateTime.Now;
+      post.CreatedBy = GetLoggedInUserId();
       post.LastUpdate = DateTime.Now;
       _context.Posts.Add(post);
       await _context.SaveChangesAsync();
@@ -137,7 +148,7 @@ namespace VisualNetworkAPI.Controllers
       {
         PostId = postId,
         Description = commentDto.Description,
-        //CreatedBy = GetLoggedInUsername(), 
+        CreatedBy = GetLoggedInUsername(), 
         CreatedDate = DateTime.UtcNow,
         LastUpdate = DateTime.UtcNow
       };
@@ -160,19 +171,86 @@ namespace VisualNetworkAPI.Controllers
 
 
 
-    // TODO: --Reactions
-    // GetAllPostReactions
-    // CreatePostReaction
-    // DeletePostReaction
+    /* TODO: Access
+    POST    /api/Access/register
+    POST    /api/Access/login
+    POST    /api/Access/refresh-token
+    POST    /api/Access/logout
+    */
 
-    // TODO: Tags
-    // TODO: DTOs CreatePostTag, GetPostTags
-    // GetAllPostTags
-    // CreatePostTag
-    // DeletePostTag
+    /* TODO: User
+    GET     /api/User
+    GET     /api/User/{id}
+    PUT     /api/User/{id}
+    DELETE  /api/User/{id}
+    */
 
-    //TODO: Boards
-    // GetAllBoards of a  post
+    /* TODO: Followers
+    GET     /api/User/{id}/Followers
+    GET     /api/User/{id}/Following
+    // PENDING:
+    POST    /api/User/{id}/Followers
+    DELETE  /api/User/{id}/Followers/{followerId}
+    */
+
+    /* TODO: Like Post
+    GET     /api/User/{id}/liked-posts
+    // PENDING:
+    POST    /api/Post/{postId}/likes
+    DELETE  /api/Post/{postId}/likes/{userId}
+    GET     /api/Post/{postId}/likes
+    */
+
+    /* TODO: Post
+    GET     /api/Post
+    GET     /api/Post/{id}
+    // PENDING:
+    GET     /api/User/{userId}/posts
+    POST    /api/Post
+    PUT     /api/Post/{id}
+    DELETE  /api/Post/{id}
+    */
+
+    /* TODO: Comments
+    GET     /api/Post/{postId}/comments
+    PUT     /api/Post/{postId}/comments   // DELETE THIS EP, REPLACED BY PUT COMMENT
+    // PENDING:
+    POST    /api/Post/{postId}/comments
+    GET     /api/Comments/{commentId}
+    PUT     /api/Comments/{commentId}
+    DELETE  /api/Comments/{commentId}
+    */
+
+    /* TODO: Tag
+    // PENDING:
+    POST    /api/Tag
+    GET     /api/Tag
+    GET     /api/Tag/{id}
+    PUT     /api/Tag/{id}
+    DELETE  /api/Tag/{id}
+    */
+
+    /* TODO: Post_Tag
+    // PENDING:
+    POST    /api/Post/{postId}/tags       // Add a tag to a post
+    GET     /api/Post/{postId}/tags       // Get all tags for a post
+    GET     /api/Tag/{tagId}/posts        // Get all posts for a specific tag
+    DELETE  /api/Post/{postId}/tags/{tagId} // Remove a tag from a post
+    */
+
+    /* TODO: Board
+    GET     /api/Board
+    POST    /api/Board
+    PUT     /api/Board/{id}
+    DELETE  /api/Board/{id}
+    */
+
+    /* TODO: Board_Post
+    // PENDING:
+    POST    /api/Board/{boardId}/posts        // Add a post to a board
+    GET     /api/Board/{boardId}/posts        // Get all posts on a specific board
+    DELETE  /api/Board/{boardId}/posts/{postId} // Remove a post from a board
+    */
 
 
   }
