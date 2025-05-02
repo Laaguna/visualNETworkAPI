@@ -3,13 +3,14 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using VisualNetworkAPI.Models;
 using Microsoft.AspNetCore.Authorization;
+using VisualNetworkAPI.Models.DTOs;
 
 namespace VisualNetworkAPI.Controllers
 {
   [Route("api/[controller]")]
   [Authorize]
   [ApiController]
-  public class UserController : ControllerBase
+  public class UserController : BaseUserController
   {
     private readonly VisualNetworkContext _context;
     public UserController(VisualNetworkContext context)
@@ -70,6 +71,105 @@ namespace VisualNetworkAPI.Controllers
       };
 
       return Ok(new { data = publicUser });
+    }
+
+    [HttpPut("{id}")]
+    public async Task<IActionResult> UpdateUser(int id, [FromBody] User user)
+    {
+      if (!ModelState.IsValid)
+      {
+        return BadRequest(ModelState);
+      }
+
+      var userToUpdate = await _context.Users.FindAsync(id);
+
+      if (userToUpdate == null)
+      {
+        return NotFound(new { message = "Usuario no encontrado" });
+      }
+
+      userToUpdate.FirstName = user.FirstName ?? userToUpdate.FirstName;
+      userToUpdate.LastName = user.LastName ?? userToUpdate.LastName;
+      userToUpdate.Email = user.Email ?? userToUpdate.Email;
+      userToUpdate.Phone = user.Phone ?? userToUpdate.Phone;
+      userToUpdate.Address = user.Address ?? userToUpdate.Address;
+      userToUpdate.Genre = user.Genre ?? userToUpdate.Genre;
+      userToUpdate.LastUpdate = DateTime.UtcNow;
+
+      await _context.SaveChangesAsync();
+
+      var publicUser = new UserPublicDto
+      {
+        Id = userToUpdate.Id,
+        User = userToUpdate.User1,
+        Email = userToUpdate.Email,
+        FirstName = userToUpdate.FirstName,
+        LastName = userToUpdate.LastName,
+        DateBirth = userToUpdate.DateBirth,
+        Active = userToUpdate.Active,
+        Phone = userToUpdate.Phone,
+        Address = userToUpdate.Address,
+        Genre = userToUpdate.Genre,
+        CreatedBy = userToUpdate.CreatedBy,
+        CreatedDate = userToUpdate.CreatedDate,
+        LastUpdate = userToUpdate.LastUpdate
+      };
+
+      return Ok(new { data = publicUser });
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeactivateUser(int id)
+    {
+      var userToDeactivate = await _context.Users.FindAsync(id);
+
+      if (userToDeactivate == null)
+      {
+        return NotFound(new { message = "Usuario no encontrado" });
+      }
+
+      if (!userToDeactivate.Active)
+      {
+        return BadRequest(new { message = "El usuario ya está inactivo" });
+      }
+
+      userToDeactivate.Active = false;
+      userToDeactivate.LastUpdate = DateTime.UtcNow;
+
+      await _context.SaveChangesAsync();
+
+      return Ok(new { message = $"Usuario con ID {id} inactivado exitosamente" });
+    }
+
+    [HttpGet("{userId}/posts")] 
+    public async Task<IActionResult> GetUserPosts(int userId)
+    {
+      var userExists = await _context.Users.AnyAsync(u => u.Id == userId);
+      if (!userExists)
+      {
+        return NotFound(new { message = "Usuario no encontrado" });
+      }
+
+      var userPosts = await _context.Posts
+          .Where(p => p.CreatedBy == userId)
+          .Select(p => new PostDTO 
+          {
+            Id = p.Id,
+            Title = p.Title,
+            Description = p.Description,
+            ImageUrls = p.ImageUrls,
+            JsonPersonalizacion = p.JsonPersonalizacion,
+            CreatedBy = p.CreatedBy,
+            CreatedDate = p.CreatedDate,
+            LastUpdate = p.LastUpdate,
+            CommentCount = p.Comments.Count,
+            LikeCount = p.LikePosts.Count,
+            TagCount = p.PostTags.Count,
+
+          })
+          .ToListAsync();
+
+      return Ok(new { data = userPosts });
     }
 
     [HttpGet("{id}/followers")]
@@ -170,6 +270,75 @@ namespace VisualNetworkAPI.Controllers
       return Ok(new { data = followingData });
     }
 
+    [HttpPost("{id}/followers")]
+    public async Task<IActionResult> FollowUser(int id)
+    {
+      var userToFollow = await _context.Users.FindAsync(id);
+      if (userToFollow == null)
+      {
+        return NotFound(new { message = "Usuario a seguir no encontrado" });
+      }
+
+      var currentUserId = GetLoggedInUserId(); // Obtiene el ID del usuario que está haciendo la solicitud
+      if (!currentUserId.HasValue)
+      {
+        return Unauthorized(new { message = "Usuario no autenticado" });
+      }
+
+      if (currentUserId == id)
+      {
+        return BadRequest(new { message = "No puedes seguirte a ti mismo" });
+      }
+
+      // Verifica si ya existe la relación de seguimiento
+      var existingFollow = await _context.Followers.FirstOrDefaultAsync(f => f.FollowerId == currentUserId && f.FollowedId == id);
+      if (existingFollow != null)
+      {
+        return Conflict(new { message = "Ya estás siguiendo a este usuario" });
+      }
+
+      var newFollow = new Follower
+      {
+        FollowerId = currentUserId.Value,
+        FollowedId = id,
+        FollowDate = DateTime.UtcNow
+      };
+
+      _context.Followers.Add(newFollow);
+      await _context.SaveChangesAsync();
+
+      return CreatedAtAction(nameof(GetUserFollowers), new { id = id }, new { message = "Usuario seguido exitosamente" }); // Puedes devolver información adicional si lo deseas
+    }
+
+    [HttpDelete("{id}/followers")]
+    public async Task<IActionResult> UnfollowUser(int id)
+    {
+      var userToUnfollow = await _context.Users.FindAsync(id);
+      if (userToUnfollow == null)
+      {
+        return NotFound(new { message = "Usuario a dejar de seguir no encontrado" });
+      }
+
+      var currentUserId = GetLoggedInUserId(); // Obtiene el ID del usuario que está haciendo la solicitud
+      if (!currentUserId.HasValue)
+      {
+        return Unauthorized(new { message = "Usuario no autenticado" });
+      }
+
+
+      // Verifica si existe la relación de seguimiento
+      var followToDelete = await _context.Followers.FirstOrDefaultAsync(f => f.FollowerId == currentUserId && f.FollowedId == id);
+      if (followToDelete == null)
+      {
+        return NotFound(new { message = "No estás siguiendo a este usuario" });
+      }
+
+      _context.Followers.Remove(followToDelete);
+      await _context.SaveChangesAsync();
+
+      return NoContent(); // 204 No Content para indicar éxito sin cuerpo de respuesta
+    }
+
     [HttpGet("{id}/liked-posts")]
     public async Task<IActionResult> GetUserLikedPosts(int id)
     {
@@ -187,7 +356,7 @@ namespace VisualNetworkAPI.Controllers
       var likedPostsData = new List<object>();
       foreach (var postId in likedPostIds)
       {
-        var post = await _context.Posts.FindAsync(postId); 
+        var post = await _context.Posts.FindAsync(postId);
         if (post != null)
         {
           likedPostsData.Add(new
@@ -206,7 +375,7 @@ namespace VisualNetworkAPI.Controllers
             },
             LikedDate = await _context.LikePosts
                   .Where(lp => lp.UserId == id && lp.PostId == postId)
-                  .Select(lp => lp.CreatedDate) 
+                  .Select(lp => lp.CreatedDate)
                   .FirstOrDefaultAsync()
           });
         }
@@ -214,75 +383,5 @@ namespace VisualNetworkAPI.Controllers
 
       return Ok(new { data = likedPostsData });
     }
-
-    [HttpPut("{id}")]
-    public async Task<IActionResult> UpdateUser(int id, [FromBody] User user)
-    {
-      if (!ModelState.IsValid)
-      {
-        return BadRequest(ModelState);
-      }
-
-      var userToUpdate = await _context.Users.FindAsync(id);
-
-      if (userToUpdate == null)
-      {
-        return NotFound(new { message = "Usuario no encontrado" });
-      }
-
-      userToUpdate.FirstName = user.FirstName ?? userToUpdate.FirstName;
-      userToUpdate.LastName = user.LastName ?? userToUpdate.LastName;
-      userToUpdate.Email = user.Email ?? userToUpdate.Email;
-      userToUpdate.Phone = user.Phone ?? userToUpdate.Phone;
-      userToUpdate.Address = user.Address ?? userToUpdate.Address;
-      userToUpdate.Genre = user.Genre ?? userToUpdate.Genre;
-      userToUpdate.LastUpdate = DateTime.UtcNow;
-
-      await _context.SaveChangesAsync();
-
-      var publicUser = new UserPublicDto
-      {
-        Id = userToUpdate.Id,
-        User = userToUpdate.User1,
-        Email = userToUpdate.Email,
-        FirstName = userToUpdate.FirstName,
-        LastName = userToUpdate.LastName,
-        DateBirth = userToUpdate.DateBirth,
-        Active = userToUpdate.Active,
-        Phone = userToUpdate.Phone,
-        Address = userToUpdate.Address,
-        Genre = userToUpdate.Genre,
-        CreatedBy = userToUpdate.CreatedBy,
-        CreatedDate = userToUpdate.CreatedDate,
-        LastUpdate = userToUpdate.LastUpdate
-      };
-
-      return Ok(new { data = publicUser });
-    }
-
-    [HttpDelete("{id}")]
-    public async Task<IActionResult> DeactivateUser(int id)
-    {
-      var userToDeactivate = await _context.Users.FindAsync(id);
-
-      if (userToDeactivate == null)
-      {
-        return NotFound(new { message = "Usuario no encontrado" });
-      }
-
-      if (!userToDeactivate.Active)
-      {
-        return BadRequest(new { message = "El usuario ya está inactivo" });
-      }
-
-      userToDeactivate.Active = false;
-      userToDeactivate.LastUpdate = DateTime.UtcNow;
-
-      await _context.SaveChangesAsync();
-
-      return Ok(new { message = $"Usuario con ID {id} inactivado exitosamente" });
-    }
-
-
   }
 }

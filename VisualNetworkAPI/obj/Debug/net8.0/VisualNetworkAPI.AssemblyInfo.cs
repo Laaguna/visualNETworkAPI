@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("VisualNetworkAPI")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+57e288f1cd0b1d8f7aaff05b0b5b81551f27d14c")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+003549345414bab16b77037081593b133ac4b0ad")]
 [assembly: System.Reflection.AssemblyProductAttribute("VisualNetworkAPI")]
 [assembly: System.Reflection.AssemblyTitleAttribute("VisualNetworkAPI")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

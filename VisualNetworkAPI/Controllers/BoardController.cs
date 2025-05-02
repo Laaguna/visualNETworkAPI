@@ -9,7 +9,7 @@ namespace VisualNetworkAPI.Controllers
   [Route("api/[controller]")]
   [Authorize]
   [ApiController]
-  public class BoardController : ControllerBase
+  public class BoardController : BaseUserController
   {
 
     private readonly VisualNetworkContext _context;
@@ -46,6 +46,7 @@ namespace VisualNetworkAPI.Controllers
         return BadRequest(ModelState);
       }
 
+      board.CreatedBy = GetLoggedInUsername();
       board.CreatedDate = DateTime.UtcNow;
       board.LastUpdate = DateTime.UtcNow;
       _context.Boards.Add(board);
@@ -62,11 +63,6 @@ namespace VisualNetworkAPI.Controllers
         return BadRequest(ModelState);
       }
 
-      if (id != board.Id)
-      {
-        return BadRequest(new { message = "El ID del tablero no coincide con el ID proporcionado en la ruta" });
-      }
-
       var boardToUpdate = await _context.Boards.FindAsync(id);
 
       if (boardToUpdate == null)
@@ -81,7 +77,7 @@ namespace VisualNetworkAPI.Controllers
       _context.Entry(boardToUpdate).State = EntityState.Modified;
       await _context.SaveChangesAsync();
 
-      return Ok(new { data = boardToUpdate }); 
+      return Ok(new { data = boardToUpdate });
     }
 
     [HttpDelete("{id}")]

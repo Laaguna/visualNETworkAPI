@@ -56,7 +56,7 @@ namespace VisualNetworkAPI.Controllers
     [HttpPost]
     public async Task<IActionResult> CreatPost([FromBody] Post post)
     {
-      if(!ModelState.IsValid)
+      if (!ModelState.IsValid)
       {
         return BadRequest(ModelState);
       }
@@ -67,7 +67,7 @@ namespace VisualNetworkAPI.Controllers
       _context.Posts.Add(post);
       await _context.SaveChangesAsync();
 
-      return CreatedAtAction(nameof(Post), new { id = post.Id}, new { data = post });
+      return CreatedAtAction(nameof(GetPostId), new { id = post.Id }, new { data = post });
     }
 
     [HttpPut("{id}")]
@@ -75,7 +75,6 @@ namespace VisualNetworkAPI.Controllers
     {
       if (!ModelState.IsValid) return BadRequest(ModelState);
 
-      if (id != post.Id) return BadRequest(new { message = "El ID del post no coincide con el ID proporcionado en la ruta" });
 
       var postToUpdate = await _context.Posts.FindAsync(id);
 
@@ -112,6 +111,99 @@ namespace VisualNetworkAPI.Controllers
     // UpdatePostComment
     // DeletePostComment
 
+    [HttpPost("{postId}/likes")]
+    public async Task<IActionResult> LikePost(int postId)
+    {
+      var postToLike = await _context.Posts.FindAsync(postId);
+      if (postToLike == null)
+      {
+        return NotFound(new { message = "Publicación no encontrada" });
+      }
+
+      var currentUserId = GetLoggedInUserId();
+      if (!currentUserId.HasValue)
+      {
+        return Unauthorized(new { message = "Usuario no autenticado" });
+      }
+
+      // Verifica si el usuario ya le dio like al post
+      var existingLike = await _context.LikePosts
+          .FirstOrDefaultAsync(lp => lp.PostId == postId && lp.UserId == currentUserId.Value);
+
+      if (existingLike != null)
+      {
+        return Conflict(new { message = "Ya has dado \"Me Gusta\" a esta publicación" });
+      }
+
+      var newLike = new LikePost
+      {
+        PostId = postId,
+        UserId = currentUserId.Value,
+        CreatedDate = DateTime.UtcNow // Usa CreatedDate para almacenar la fecha del "like"
+      };
+
+      _context.LikePosts.Add(newLike);
+      await _context.SaveChangesAsync();
+
+      return CreatedAtAction(nameof(GetPostLikes), new { postId = postId }, new { message = "Te gusta esta publicación" });
+    }
+
+    [HttpDelete("{postId}/likes")]
+    public async Task<IActionResult> UnlikePost(int postId)
+    {
+      var postToUnlike = await _context.Posts.FindAsync(postId);
+      if (postToUnlike == null)
+      {
+        return NotFound(new { message = "Publicación no encontrada" });
+      }
+
+      var currentUserId = GetLoggedInUserId();
+      if (!currentUserId.HasValue)
+      {
+        return Unauthorized(new { message = "Usuario no autenticado" });
+      }
+
+
+      // Verifica si existe el "like"
+      var likeToDelete = await _context.LikePosts
+          .FirstOrDefaultAsync(lp => lp.PostId == postId && lp.UserId == currentUserId.Value);
+
+      if (likeToDelete == null)
+      {
+        return NotFound(new { message = "No has dado \"Me Gusta\" a esta publicación" });
+      }
+
+      _context.LikePosts.Remove(likeToDelete);
+      await _context.SaveChangesAsync();
+
+      return NoContent();
+    }
+
+    [HttpGet("{postId}/likes")]
+    public async Task<IActionResult> GetPostLikes(int postId)
+    {
+      var postExists = await _context.Posts.AnyAsync(p => p.Id == postId);
+      if (!postExists)
+      {
+        return NotFound(new { message = "Publicación no encontrada" });
+      }
+
+      var likes = await _context.LikePosts
+          .Where(lp => lp.PostId == postId)
+          .Include(lp => lp.User) // Incluye la información del usuario que dio like
+          .Select(lp => new
+          {
+            UserId = lp.UserId,
+            UserName = lp.User.User1, // O las propiedades del usuario que quieras exponer
+            LikedDate = lp.CreatedDate
+            // Puedes agregar más propiedades del usuario si es necesario (nombre, etc.)
+          })
+          .ToListAsync();
+
+      return Ok(new { data = likes });
+    }
+
+
     // GET: api/Post/{postId}/comments
     [HttpGet("{postId}/comments")]
     public async Task<IActionResult> GetAllPostComments(int postId)
@@ -141,14 +233,14 @@ namespace VisualNetworkAPI.Controllers
       if (!ModelState.IsValid) return BadRequest(ModelState);
 
       var postExists = await _context.Posts.AnyAsync(p => p.Id == postId);
-      if (!postExists)return NotFound(new { message = "Publicación no encontrada" });
-      
+      if (!postExists) return NotFound(new { message = "Publicación no encontrada" });
+
 
       var newComment = new Comment
       {
         PostId = postId,
         Description = commentDto.Description,
-        CreatedBy = GetLoggedInUsername(), 
+        CreatedBy = GetLoggedInUsername(),
         CreatedDate = DateTime.UtcNow,
         LastUpdate = DateTime.UtcNow
       };
@@ -160,14 +252,13 @@ namespace VisualNetworkAPI.Controllers
       {
         Id = newComment.Id,
         Description = newComment.Description,
-        //CreatedBy = newComment.CreatedBy,
+        CreatedBy = newComment.CreatedBy, // Include CreatedBy in the response
         CreatedDate = newComment.CreatedDate,
         LastUpdate = newComment.LastUpdate
       };
 
       return CreatedAtAction(nameof(GetAllPostComments), new { postId = postId }, new { data = createdCommentDto });
     }
-
 
 
 
@@ -188,37 +279,51 @@ namespace VisualNetworkAPI.Controllers
     /* TODO: Followers
     GET     /api/User/{id}/Followers
     GET     /api/User/{id}/Following
-    // PENDING:
-    POST    /api/User/{id}/Followers
-    DELETE  /api/User/{id}/Followers/{followerId}
+    // PENDING: READY
+    POST    /api/User/{id}/Followers - R
+    DELETE  /api/User/{id}/Followers/{followerId} - R
     */
 
     /* TODO: Like Post
     GET     /api/User/{id}/liked-posts
-    // PENDING:
-    POST    /api/Post/{postId}/likes
-    DELETE  /api/Post/{postId}/likes/{userId}
-    GET     /api/Post/{postId}/likes
+    // PENDING: READY
+    POST    /api/Post/{postId}/likes - R
+    DELETE  /api/Post/{postId}/likes/{userId} - R
+    GET     /api/Post/{postId}/likes - R 
     */
 
     /* TODO: Post
     GET     /api/Post
     GET     /api/Post/{id}
-    // PENDING:
-    GET     /api/User/{userId}/posts
     POST    /api/Post
     PUT     /api/Post/{id}
     DELETE  /api/Post/{id}
+    // PENDING: READY
+    GET     /api/User/{userId}/posts - Get posts of a user - R 
     */
 
     /* TODO: Comments
     GET     /api/Post/{postId}/comments
     PUT     /api/Post/{postId}/comments   // DELETE THIS EP, REPLACED BY PUT COMMENT
-    // PENDING:
-    POST    /api/Post/{postId}/comments
-    GET     /api/Comments/{commentId}
-    PUT     /api/Comments/{commentId}
-    DELETE  /api/Comments/{commentId}
+    // PENDING: READY
+    POST    /api/Post/{postId}/comments - Crear un comment - R
+    GET     /api/Comments/{commentId} - Obtener un comment - R
+    PUT     /api/Comments/{commentId} - Editar un comment - R
+    DELETE  /api/Comments/{commentId} - Borrar un comment - R
+    */
+
+    /* TODO: Board
+    GET     /api/Board
+    POST    /api/Board
+    PUT     /api/Board/{id}
+    DELETE  /api/Board/{id}
+    */
+
+    /* TODO: Board_Post
+    // PENDING: READY
+    POST    /api/Board/{boardId}/posts        // Add a post to a board - R
+    GET     /api/Board/{boardId}/posts        // Get all posts on a specific board - R
+    DELETE  /api/Board/{boardId}/posts/{postId} // Remove a post from a board - R
     */
 
     /* TODO: Tag
@@ -236,20 +341,6 @@ namespace VisualNetworkAPI.Controllers
     GET     /api/Post/{postId}/tags       // Get all tags for a post
     GET     /api/Tag/{tagId}/posts        // Get all posts for a specific tag
     DELETE  /api/Post/{postId}/tags/{tagId} // Remove a tag from a post
-    */
-
-    /* TODO: Board
-    GET     /api/Board
-    POST    /api/Board
-    PUT     /api/Board/{id}
-    DELETE  /api/Board/{id}
-    */
-
-    /* TODO: Board_Post
-    // PENDING:
-    POST    /api/Board/{boardId}/posts        // Add a post to a board
-    GET     /api/Board/{boardId}/posts        // Get all posts on a specific board
-    DELETE  /api/Board/{boardId}/posts/{postId} // Remove a post from a board
     */
 
 
