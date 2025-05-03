@@ -144,8 +144,24 @@
   },
   {
     "ContainingType": "VisualNetworkAPI.Controllers.BoardPostController",
-    "Method": "AddPostToBoard",
+    "Method": "GetBoardPosts",
     "RelativePath": "api/BoardPost/{boardId}/posts",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "boardId",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "VisualNetworkAPI.Controllers.BoardPostController",
+    "Method": "AddPostToBoard",
+    "RelativePath": "api/BoardPost/{boardId}/posts/{postId}",
     "HttpMethod": "POST",
     "IsController": true,
     "Order": 0,
@@ -157,22 +173,6 @@
       },
       {
         "Name": "postId",
-        "Type": "System.Int32",
-        "IsRequired": false
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "VisualNetworkAPI.Controllers.BoardPostController",
-    "Method": "GetBoardPosts",
-    "RelativePath": "api/BoardPost/{boardId}/posts",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "boardId",
         "Type": "System.Int32",
         "IsRequired": true
       }

@@ -1,9 +1,13 @@
 .vs/
-bin/
-obj/
+VisualNetworkAPI/bin/
+VisualNetworkAPI/obj/
+VisualNetworkAPI/obj/Debug/
+VisualNetworkAPI/obj/Release/
 *.user
 *.suo
 *.sln.docstates
 *.cache
 *.resharper*
 _ReSharper.*
+
+
