@@ -44,25 +44,32 @@ namespace VisualNetworkAPI.Controllers
       return Ok(new { data = post });
     }
 
+
     [HttpPost]
     public async Task<IActionResult> CreatePost([FromForm] PostDTO postDto)
     {
-      if (postDto.Image == null || postDto.Image.Length == 0)
+      if (postDto.Images == null || !postDto.Images.Any())
       {
-        return BadRequest("Debe subir una imagen.");
+        return BadRequest("Debe subir al menos una imagen.");
       }
 
-      // Generar nombre único para la imagen
-      var fileName = $"{Guid.NewGuid()}{Path.GetExtension(postDto.Image.FileName)}";
-      var imagePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", fileName);
+      var imageUrls = new List<string>();
 
-      // Guardar imagen
-      using (var stream = new FileStream(imagePath, FileMode.Create))
+      foreach (var image in postDto.Images)
       {
-        await postDto.Image.CopyToAsync(stream);
+        if (image.Length == 0) continue;
+
+        var fileName = $"{Guid.NewGuid()}{Path.GetExtension(image.FileName)}";
+        var imagePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", fileName);
+
+        using (var stream = new FileStream(imagePath, FileMode.Create))
+        {
+          await image.CopyToAsync(stream);
+        }
+
+        imageUrls.Add($"/images/{fileName}");
       }
 
-      // Crear el post
       var post = new Post
       {
         Title = postDto.Title,
@@ -71,7 +78,7 @@ namespace VisualNetworkAPI.Controllers
         CreatedBy = GetLoggedInUserId(),
         CreatedDate = DateTime.Now,
         LastUpdate = DateTime.Now,
-        ImageUrls = $"/images/{fileName}"
+        ImageUrls = string.Join(",", imageUrls) // Guardas las URLs separadas por coma
       };
 
       _context.Posts.Add(post);

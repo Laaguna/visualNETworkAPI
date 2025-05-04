@@ -6,7 +6,7 @@ namespace VisualNetworkAPI.Models.DTOs
     public string? Title { get; set; }
     public string? Description { get; set; }
     public string? JsonPersonalizacion { get; set; }
-    public IFormFile? Image { get; set; }
+    public List<IFormFile>? Images { get; set; }
     public DateTime? CreatedDate { get; set; }
   }
 }

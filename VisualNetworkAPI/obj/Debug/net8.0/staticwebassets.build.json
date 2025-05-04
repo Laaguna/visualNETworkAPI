@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "dq+0xKtlTvUNlcakAHJuHaNFFrrd8ZR3Ai1TS6/UUJQ=",
+  "Hash": "uiwRYMRYvXfpdRuml3XSjM3uIVPaEm86Nv8ysJJmJuA=",
   "Source": "VisualNetworkAPI",
   "BasePath": "_content/VisualNetworkAPI",
   "Mode": "Default",
@@ -16,6 +16,44 @@
     }
   ],
   "Assets": [
+    {
+      "Identity": "E:\\Github\\VisualNetworkAPI\\VisualNetworkAPI\\wwwroot\\images\\04ca01cb-d02c-4e8c-97a0-4d94981f1d0f.jpg",
+      "SourceId": "VisualNetworkAPI",
+      "SourceType": "Discovered",
+      "ContentRoot": "E:\\Github\\VisualNetworkAPI\\VisualNetworkAPI\\wwwroot\\",
+      "BasePath": "_content/VisualNetworkAPI",
+      "RelativePath": "images/04ca01cb-d02c-4e8c-97a0-4d94981f1d0f.jpg",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "PreferTarget",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\images\\04ca01cb-d02c-4e8c-97a0-4d94981f1d0f.jpg"
+    },
+    {
+      "Identity": "E:\\Github\\VisualNetworkAPI\\VisualNetworkAPI\\wwwroot\\images\\191a57c3-727e-4fc8-85b2-63ff4a830bac.png",
+      "SourceId": "VisualNetworkAPI",
+      "SourceType": "Discovered",
+      "ContentRoot": "E:\\Github\\VisualNetworkAPI\\VisualNetworkAPI\\wwwroot\\",
+      "BasePath": "_content/VisualNetworkAPI",
+      "RelativePath": "images/191a57c3-727e-4fc8-85b2-63ff4a830bac.png",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "PreferTarget",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\images\\191a57c3-727e-4fc8-85b2-63ff4a830bac.png"
+    },
     {
       "Identity": "E:\\Github\\VisualNetworkAPI\\VisualNetworkAPI\\wwwroot\\images\\bba80721-d20d-4094-80e3-6c7978f09de4.jpg",
       "SourceId": "VisualNetworkAPI",
@@ -34,6 +72,44 @@
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot\\images\\bba80721-d20d-4094-80e3-6c7978f09de4.jpg"
+    },
+    {
+      "Identity": "E:\\Github\\VisualNetworkAPI\\VisualNetworkAPI\\wwwroot\\images\\bead394a-e2e3-4c43-92fe-9c73eab169d5.jpg",
+      "SourceId": "VisualNetworkAPI",
+      "SourceType": "Discovered",
+      "ContentRoot": "E:\\Github\\VisualNetworkAPI\\VisualNetworkAPI\\wwwroot\\",
+      "BasePath": "_content/VisualNetworkAPI",
+      "RelativePath": "images/bead394a-e2e3-4c43-92fe-9c73eab169d5.jpg",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "PreferTarget",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\images\\bead394a-e2e3-4c43-92fe-9c73eab169d5.jpg"
+    },
+    {
+      "Identity": "E:\\Github\\VisualNetworkAPI\\VisualNetworkAPI\\wwwroot\\images\\cc9af6e5-85e2-4ebf-b22d-a65644e636ba.jpg",
+      "SourceId": "VisualNetworkAPI",
+      "SourceType": "Discovered",
+      "ContentRoot": "E:\\Github\\VisualNetworkAPI\\VisualNetworkAPI\\wwwroot\\",
+      "BasePath": "_content/VisualNetworkAPI",
+      "RelativePath": "images/cc9af6e5-85e2-4ebf-b22d-a65644e636ba.jpg",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "PreferTarget",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\images\\cc9af6e5-85e2-4ebf-b22d-a65644e636ba.jpg"
     }
   ]
 }
