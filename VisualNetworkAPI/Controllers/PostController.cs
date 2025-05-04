@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Identity.Client;
 using VisualNetworkAPI.Models;
+using VisualNetworkAPI.Models.DTOs;
 using VisualNetworkAPI.Models.DTOs.Comments;
 
 namespace VisualNetworkAPI.Controllers
@@ -19,16 +20,6 @@ namespace VisualNetworkAPI.Controllers
     public PostController(VisualNetworkContext context) : base()
     {
       _context = context;
-    }
-
-    private int? GetLoggedInUserId()
-    {
-      return base.GetLoggedInUserId();
-    }
-
-    private string? GetLoggedInUsername()
-    {
-      return base.GetLoggedInUsername();
     }
 
     // GetAllPosts
@@ -54,16 +45,35 @@ namespace VisualNetworkAPI.Controllers
     }
 
     [HttpPost]
-    public async Task<IActionResult> CreatPost([FromBody] Post post)
+    public async Task<IActionResult> CreatePost([FromForm] PostDTO postDto)
     {
-      if (!ModelState.IsValid)
+      if (postDto.Image == null || postDto.Image.Length == 0)
       {
-        return BadRequest(ModelState);
+        return BadRequest("Debe subir una imagen.");
       }
 
-      post.CreatedDate = DateTime.Now;
-      post.CreatedBy = GetLoggedInUserId();
-      post.LastUpdate = DateTime.Now;
+      // Generar nombre único para la imagen
+      var fileName = $"{Guid.NewGuid()}{Path.GetExtension(postDto.Image.FileName)}";
+      var imagePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", fileName);
+
+      // Guardar imagen
+      using (var stream = new FileStream(imagePath, FileMode.Create))
+      {
+        await postDto.Image.CopyToAsync(stream);
+      }
+
+      // Crear el post
+      var post = new Post
+      {
+        Title = postDto.Title,
+        Description = postDto.Description,
+        JsonPersonalizacion = postDto.JsonPersonalizacion,
+        CreatedBy = GetLoggedInUserId(),
+        CreatedDate = DateTime.Now,
+        LastUpdate = DateTime.Now,
+        ImageUrls = $"/images/{fileName}"
+      };
+
       _context.Posts.Add(post);
       await _context.SaveChangesAsync();
 

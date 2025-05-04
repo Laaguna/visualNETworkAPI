@@ -510,3 +510,4 @@ E:\Github\VisualNetworkAPI\VisualNetworkAPI\obj\Debug\net8.0\VisualNetworkAPI.ge
 E:\Github\VisualNetworkAPI\VisualNetworkAPI\obj\Debug\net8.0\ref\VisualNetworkAPI.dll
 E:\Github\VisualNetworkAPI\VisualNetworkAPI\obj\Debug\net8.0\VisualNetworkAPI.sourcelink.json
 >>>>>>> Stashed changes
+E:\Github\VisualNetworkAPI\VisualNetworkAPI\bin\Debug\net8.0\VisualNetworkAPI.staticwebassets.runtime.json

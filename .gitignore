@@ -3,6 +3,8 @@ VisualNetworkAPI/bin/
 VisualNetworkAPI/obj/
 VisualNetworkAPI/obj/Debug/
 VisualNetworkAPI/obj/Release/
+VisualNetworkAPI/wwwroot/images/*
+!VisualNetworkAPI/wwwroot/images/.gitkeep
 *.user
 *.suo
 *.sln.docstates

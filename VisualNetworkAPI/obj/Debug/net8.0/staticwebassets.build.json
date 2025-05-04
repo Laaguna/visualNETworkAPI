@@ -1,11 +1,39 @@
 {
   "Version": 1,
-  "Hash": "55pA44zWsj7AIDiPvgoUxbWrKOtRP3YbZtuMzgLD3iY=",
+  "Hash": "dq+0xKtlTvUNlcakAHJuHaNFFrrd8ZR3Ai1TS6/UUJQ=",
   "Source": "VisualNetworkAPI",
   "BasePath": "_content/VisualNetworkAPI",
   "Mode": "Default",
   "ManifestType": "Build",
   "ReferencedProjectsConfiguration": [],
-  "DiscoveryPatterns": [],
-  "Assets": []
+  "DiscoveryPatterns": [
+    {
+      "Name": "VisualNetworkAPI\\wwwroot",
+      "Source": "VisualNetworkAPI",
+      "ContentRoot": "E:\\Github\\VisualNetworkAPI\\VisualNetworkAPI\\wwwroot\\",
+      "BasePath": "_content/VisualNetworkAPI",
+      "Pattern": "**"
+    }
+  ],
+  "Assets": [
+    {
+      "Identity": "E:\\Github\\VisualNetworkAPI\\VisualNetworkAPI\\wwwroot\\images\\bba80721-d20d-4094-80e3-6c7978f09de4.jpg",
+      "SourceId": "VisualNetworkAPI",
+      "SourceType": "Discovered",
+      "ContentRoot": "E:\\Github\\VisualNetworkAPI\\VisualNetworkAPI\\wwwroot\\",
+      "BasePath": "_content/VisualNetworkAPI",
+      "RelativePath": "images/bba80721-d20d-4094-80e3-6c7978f09de4.jpg",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "PreferTarget",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\images\\bba80721-d20d-4094-80e3-6c7978f09de4.jpg"
+    }
+  ]
 }

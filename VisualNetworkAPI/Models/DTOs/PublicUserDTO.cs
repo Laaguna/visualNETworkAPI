@@ -1,10 +1,10 @@
 public class UserPublicDto
 {
     public int Id { get; set; }
-    public string User { get; set; }
-    public string Email { get; set; }
-    public string FirstName { get; set; }
-    public string LastName { get; set; }
+    required public string  User { get; set; }
+    required public string Email { get; set; }
+    required public string FirstName { get; set; }
+    required public string LastName { get; set; }
     public DateOnly? DateBirth { get; set; }
     public bool Active { get; set; }
     public string? Phone { get; set; }
@@ -14,5 +14,4 @@ public class UserPublicDto
     public DateTime? CreatedDate { get; set; }
     public DateTime? LastUpdate { get; set; }
 
-  // Excluye la propiedad 'Password'
 }

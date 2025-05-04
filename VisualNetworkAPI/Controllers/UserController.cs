@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using VisualNetworkAPI.Models;
@@ -152,20 +151,14 @@ namespace VisualNetworkAPI.Controllers
 
       var userPosts = await _context.Posts
           .Where(p => p.CreatedBy == userId)
-          .Select(p => new PostDTO 
+          .Select(p => new Post 
           {
             Id = p.Id,
             Title = p.Title,
             Description = p.Description,
             ImageUrls = p.ImageUrls,
             JsonPersonalizacion = p.JsonPersonalizacion,
-            CreatedBy = p.CreatedBy,
             CreatedDate = p.CreatedDate,
-            LastUpdate = p.LastUpdate,
-            CommentCount = p.Comments.Count,
-            LikeCount = p.LikePosts.Count,
-            TagCount = p.PostTags.Count,
-
           })
           .ToListAsync();
 
