@@ -6,5 +6,6 @@ namespace VisualNetworkAPI.Models.DTOs
     public string User1 { get; set; } = null!;
     public string FirstName { get; set; } = null!;
     public string LastName { get; set; } = null!;
+    public required string Avatar { get; set; }
   }
 }

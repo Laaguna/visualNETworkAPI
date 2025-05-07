@@ -95,6 +95,7 @@ namespace VisualNetworkAPI.Controllers
       userToUpdate.Address = user.Address ?? userToUpdate.Address;
       userToUpdate.Genre = user.Genre ?? userToUpdate.Genre;
       userToUpdate.LastUpdate = DateTime.UtcNow;
+      userToUpdate.Avatar = user.Avatar ?? userToUpdate.Avatar;
 
       await _context.SaveChangesAsync();
 
@@ -112,7 +113,86 @@ namespace VisualNetworkAPI.Controllers
         Genre = userToUpdate.Genre,
         CreatedBy = userToUpdate.CreatedBy,
         CreatedDate = userToUpdate.CreatedDate,
-        LastUpdate = userToUpdate.LastUpdate
+        LastUpdate = userToUpdate.LastUpdate,
+        Avatar = userToUpdate.Avatar,
+      };
+
+      return Ok(new { data = publicUser });
+    }
+
+    [HttpPut("{id}/profile-image")]
+    public async Task<IActionResult> UpdateProfileImage(int id, IFormFile image)
+    {
+      if (image == null || image.Length == 0)
+      {
+        return BadRequest("Debe subir una imagen.");
+      }
+
+      var userToUpdate = await _context.Users.FindAsync(id);
+      if (userToUpdate == null)
+      {
+        return NotFound(new { message = "Usuario no encontrado" });
+      }
+
+      // Verificar que el usuario actual sea el dueño del perfil
+      var currentUserId = GetLoggedInUserId();
+      if (userToUpdate.Id != currentUserId)
+      {
+        return Forbid(new { message = "No tienes permiso para actualizar este perfil" }.ToString());
+      }
+
+      // Eliminar imagen anterior si no es la imagen por defecto
+      if (!string.IsNullOrEmpty(userToUpdate.Avatar) &&
+          !userToUpdate.Avatar.EndsWith("/blank.svg") &&
+          !userToUpdate.Avatar.EndsWith("/default.png"))
+      {
+        var oldImagePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot",
+            userToUpdate.Avatar.TrimStart('/').Replace('/', Path.DirectorySeparatorChar));
+
+        if (System.IO.File.Exists(oldImagePath))
+        {
+          try
+          {
+            System.IO.File.Delete(oldImagePath);
+          }
+          catch (Exception)
+          {
+            // Loguear error pero continuar
+          }
+        }
+      }
+
+      // Guardar nueva imagen
+      var fileName = $"{Guid.NewGuid()}{Path.GetExtension(image.FileName)}";
+      var imagePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "avatars", fileName);
+
+      using (var stream = new FileStream(imagePath, FileMode.Create))
+      {
+        await image.CopyToAsync(stream);
+      }
+
+      // Actualizar referencia en el usuario
+      userToUpdate.Avatar = $"/avatars/{fileName}";
+      userToUpdate.LastUpdate = DateTime.UtcNow;
+
+      await _context.SaveChangesAsync();
+
+      var publicUser = new UserPublicDto
+      {
+        Id = userToUpdate.Id,
+        User = userToUpdate.User1,
+        Email = userToUpdate.Email,
+        FirstName = userToUpdate.FirstName,
+        LastName = userToUpdate.LastName,
+        DateBirth = userToUpdate.DateBirth,
+        Active = userToUpdate.Active,
+        Phone = userToUpdate.Phone,
+        Address = userToUpdate.Address,
+        Genre = userToUpdate.Genre,
+        CreatedBy = userToUpdate.CreatedBy,
+        CreatedDate = userToUpdate.CreatedDate,
+        LastUpdate = userToUpdate.LastUpdate,
+        Avatar = userToUpdate.Avatar  
       };
 
       return Ok(new { data = publicUser });

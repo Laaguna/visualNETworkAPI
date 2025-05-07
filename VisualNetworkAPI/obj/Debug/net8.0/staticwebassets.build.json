@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "NF9xaOUvy7R/Ia6kLmyo7MmFU9BXX8TK9/ce1JTs0tU=",
+  "Hash": "Psp8aqH55wnBdEYqmUaZGDLL//ZhcXBLkTkNVpJJ6EM=",
   "Source": "VisualNetworkAPI",
   "BasePath": "_content/VisualNetworkAPI",
   "Mode": "Default",
@@ -16,6 +16,25 @@
     }
   ],
   "Assets": [
+    {
+      "Identity": "E:\\Github\\VisualNetworkAPI\\VisualNetworkAPI\\wwwroot\\avatars\\blank.svg",
+      "SourceId": "VisualNetworkAPI",
+      "SourceType": "Discovered",
+      "ContentRoot": "E:\\Github\\VisualNetworkAPI\\VisualNetworkAPI\\wwwroot\\",
+      "BasePath": "_content/VisualNetworkAPI",
+      "RelativePath": "avatars/blank.svg",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "PreferTarget",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\avatars\\blank.svg"
+    },
     {
       "Identity": "E:\\Github\\VisualNetworkAPI\\VisualNetworkAPI\\wwwroot\\images\\04ca01cb-d02c-4e8c-97a0-4d94981f1d0f.jpg",
       "SourceId": "VisualNetworkAPI",
@@ -72,6 +91,25 @@
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot\\images\\215c06b4-4cf2-4cdf-b630-dd26f0c12f68.jpg"
+    },
+    {
+      "Identity": "E:\\Github\\VisualNetworkAPI\\VisualNetworkAPI\\wwwroot\\images\\71474572-4a6b-43e3-ad92-564e5c7ef59e.jpg",
+      "SourceId": "VisualNetworkAPI",
+      "SourceType": "Discovered",
+      "ContentRoot": "E:\\Github\\VisualNetworkAPI\\VisualNetworkAPI\\wwwroot\\",
+      "BasePath": "_content/VisualNetworkAPI",
+      "RelativePath": "images/71474572-4a6b-43e3-ad92-564e5c7ef59e.jpg",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "PreferTarget",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\images\\71474572-4a6b-43e3-ad92-564e5c7ef59e.jpg"
     },
     {
       "Identity": "E:\\Github\\VisualNetworkAPI\\VisualNetworkAPI\\wwwroot\\images\\bba80721-d20d-4094-80e3-6c7978f09de4.jpg",

@@ -328,6 +328,9 @@ public partial class VisualNetworkContext : DbContext
             entity.Property(e => e.User1)
                 .HasMaxLength(50)
                 .HasColumnName("user");
+          entity.Property(e => e.Avatar)
+              .HasMaxLength(255)
+              .HasColumnName("avatar");
         });
 
         OnModelCreatingPartial(modelBuilder);

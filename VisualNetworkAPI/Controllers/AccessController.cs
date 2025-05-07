@@ -47,6 +47,7 @@ namespace VisualNetworkAPI.Controllers
         Phone = objeto.Phone,
         Address = objeto.Address,
         Genre = objeto.Genre,
+        Avatar = "/avatars/blank.svg",
         Active = true,
         CreatedBy = objeto.FirstName + " " + objeto.LastName,
         CreatedDate = DateTime.UtcNow,

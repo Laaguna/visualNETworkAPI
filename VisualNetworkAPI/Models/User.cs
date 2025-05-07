@@ -24,6 +24,8 @@ public partial class User
 
     public string? Genre { get; set; }
 
+    public string? Avatar { get; set; }
+
     public string? CreatedBy { get; set; }
 
     public DateTime? CreatedDate { get; set; }

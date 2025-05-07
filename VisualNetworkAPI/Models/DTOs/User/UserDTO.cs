@@ -11,6 +11,7 @@ namespace VisualNetworkAPI.Models.DTOs
     public string? Phone { get; set; }
     public string? Address { get; set; }
     public string? Genre { get; set; }
+    public string? Avatar { get; set; }
     public string? CreatedBy { get; set; }
     public DateTime? CreatedDate { get; set; }
     public DateTime? LastUpdate { get; set; }

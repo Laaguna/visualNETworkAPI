@@ -52,6 +52,7 @@ namespace VisualNetworkAPI.Controllers
               Id = user.Id,
               User1 = user.User1,
               FirstName = user.FirstName,
+              Avatar = user.Avatar,
               LastName = user.LastName
             };
           }
@@ -92,7 +93,8 @@ namespace VisualNetworkAPI.Controllers
             Id = user.Id,
             User1 = user.User1,
             FirstName = user.FirstName,
-            LastName = user.LastName
+            LastName = user.LastName,
+            Avatar = user.Avatar,
           };
         }
       }
@@ -157,7 +159,8 @@ namespace VisualNetworkAPI.Controllers
           Id = user.Id,
           User1 = user.User1,
           FirstName = user.FirstName,
-          LastName = user.LastName
+          LastName = user.LastName,
+          Avatar = user.Avatar,
         };
       }
 
@@ -209,7 +212,8 @@ namespace VisualNetworkAPI.Controllers
           Id = user.Id,
           User1 = user.User1,
           FirstName = user.FirstName,
-          LastName = user.LastName
+          LastName = user.LastName,
+          Avatar = user.Avatar,
         };
       }
 
@@ -377,7 +381,8 @@ namespace VisualNetworkAPI.Controllers
             Id = user.Id,
             User1 = user.User1,
             FirstName = user.FirstName,
-            LastName = user.LastName
+            LastName = user.LastName,
+            Avatar = user.Avatar,
           };
         }
 
@@ -427,7 +432,8 @@ namespace VisualNetworkAPI.Controllers
           Id = user.Id,
           User1 = user.User1,
           FirstName = user.FirstName,
-          LastName = user.LastName
+          LastName = user.LastName,
+          Avatar = user.Avatar,
         };
       }
 
