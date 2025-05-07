@@ -2,7 +2,10 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Hosting;
 using VisualNetworkAPI.Models;
+using VisualNetworkAPI.Models.DTOs;
+using VisualNetworkAPI.Models.DTOs.Board;
 
 namespace VisualNetworkAPI.Controllers
 {
@@ -22,7 +25,34 @@ namespace VisualNetworkAPI.Controllers
     public async Task<IActionResult> GetAllBoards()
     {
       var boards = await _context.Boards.ToListAsync();
-      return Ok(new { data = boards }); 
+      var boardsDTO = new List<PublicBoardDTO>();
+
+      foreach (var board in boards)
+      {
+        var boardDTO = new PublicBoardDTO
+        {
+          Id = board.Id,
+          Decoration = board.Decoration,
+          Description = board.Description,
+          CreatedDate = board.CreatedDate,
+          LastUpdate = board.LastUpdate
+        };
+
+        var user = await _context.Users.FindAsync(int.Parse(board.CreatedBy));
+        if (user != null)
+        {
+          boardDTO.CreatedBy = new PublicUserRelationDTO
+          {
+            Id = user.Id,
+            User1 = user.User1,
+            FirstName = user.FirstName,
+            LastName = user.LastName
+          };
+        }
+        boardsDTO.Add(boardDTO);
+    }
+
+      return Ok(new { data = boardsDTO }); 
     }
 
     [HttpGet("{id}")]
@@ -30,29 +60,78 @@ namespace VisualNetworkAPI.Controllers
     {
       var board = await _context.Boards.FindAsync(id);
 
-      if (board == null)
+      if (board == null) return NotFound(new { message = "Tablero no encontrado" });
+
+      var boardDTO = new PublicBoardDTO
       {
-        return NotFound(new { message = "Tablero no encontrado" });
+        Id = board.Id,
+        Description = board.Description,
+        Decoration = board.Decoration,
+        CreatedDate = board.CreatedDate,
+        LastUpdate = board.LastUpdate
+      };
+
+      var user = await _context.Users.FindAsync(int.Parse(board.CreatedBy));
+
+      if (user != null)
+      {
+        boardDTO.CreatedBy = new PublicUserRelationDTO
+        {
+          Id = user.Id,
+          User1 = user.User1,
+          FirstName = user.FirstName,
+          LastName = user.LastName
+        };
       }
 
-      return Ok(new { data = board }); 
+      return Ok(new { data = boardDTO }); 
     }
 
     [HttpPost]
-    public async Task<IActionResult> CreateBoard([FromBody] Board board)
+    public async Task<IActionResult> CreateBoard([FromBody] PostBoardDTO board)
     {
       if (!ModelState.IsValid)
       {
         return BadRequest(ModelState);
       }
 
-      board.CreatedBy = GetLoggedInUsername();
-      board.CreatedDate = DateTime.UtcNow;
-      board.LastUpdate = DateTime.UtcNow;
-      _context.Boards.Add(board);
+      var userId = GetLoggedInUserId();
+
+      var boardToCreate = new Board
+      {
+        Description = board.Description,
+        Decoration = board.Decoration,
+        CreatedBy = userId.ToString(),
+        CreatedDate = DateTime.UtcNow,
+        LastUpdate = DateTime.UtcNow,
+      };
+
+      _context.Boards.Add(boardToCreate);
       await _context.SaveChangesAsync();
 
-      return CreatedAtAction(nameof(GetBoardById), new { id = board.Id }, new { data = board }); // Considera usar un DTO para la respuesta
+      var user = await _context.Users.FindAsync(userId);
+
+      var publicBoardDTO = new PublicBoardDTO
+      {
+        Id = boardToCreate.Id,
+        Decoration = boardToCreate.Decoration,
+        Description = boardToCreate.Description,
+        CreatedDate = boardToCreate.CreatedDate,
+        LastUpdate = boardToCreate.LastUpdate
+      };
+
+      if (user != null)
+      {
+        publicBoardDTO.CreatedBy = new PublicUserRelationDTO
+        {
+          Id = user.Id,
+          User1 = user.User1,
+          FirstName = user.FirstName,
+          LastName = user.LastName
+        };
+      }
+
+      return CreatedAtAction(nameof(GetBoardById), new { id = publicBoardDTO.Id }, new { data = publicBoardDTO }); // Considera usar un DTO para la respuesta
     }
 
     [HttpPut("{id}")]

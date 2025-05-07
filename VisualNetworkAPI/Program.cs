@@ -16,8 +16,20 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddDbContext<VisualNetworkContext>(options =>
 {
-  options.UseSqlServer(builder.Configuration.GetConnectionString("SQLServer"));
+  options.UseSqlServer(
+      builder.Configuration.GetConnectionString("SQLServer"),
+      sqlOptions =>
+      {
+        // Habilita resiliencia ante fallos transitorios
+        sqlOptions.EnableRetryOnFailure(
+              maxRetryCount: 5,
+              maxRetryDelay: TimeSpan.FromSeconds(10),
+              errorNumbersToAdd: null
+          );
+      }
+  );
 });
+
 
 builder.Services.AddSingleton<Utils>();
 
@@ -58,6 +70,13 @@ if (app.Environment.IsDevelopment())
 {
   app.UseSwagger();
   app.UseSwaggerUI();
+}
+
+using (var scope = app.Services.CreateScope())
+{
+  var db = scope.ServiceProvider.GetRequiredService<VisualNetworkContext>();
+  db.Database.Migrate();
+
 }
 
 app.UseCors("NewPolicy");

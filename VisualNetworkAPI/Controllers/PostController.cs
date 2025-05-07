@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Identity.Client;
 using VisualNetworkAPI.Models;
 using VisualNetworkAPI.Models.DTOs;
+using VisualNetworkAPI.Models.DTOs.Board;
 using VisualNetworkAPI.Models.DTOs.Comments;
 
 namespace VisualNetworkAPI.Controllers
@@ -22,28 +23,82 @@ namespace VisualNetworkAPI.Controllers
       _context = context;
     }
 
-    // GetAllPosts
-    // GetPostById
-    // CreatePost
-    // UpdatePost
-    // DeletePost
-
     [HttpGet]
     public async Task<IActionResult> GetAllPosts()
     {
       var posts = await _context.Posts.ToListAsync();
-      return Ok(new { data = posts });
+      var postDtos = new List<PublicPostDTO>();
+
+      foreach (var post in posts)
+      {
+        var postDto = new PublicPostDTO
+        {
+          Id = post.Id,
+          Title = post.Title,
+          Description = post.Description,
+          JsonPersonalizacion = post.JsonPersonalizacion,
+          ImageUrls = !string.IsNullOrEmpty(post.ImageUrls) ? post.ImageUrls.Split(',').ToList() : null,
+          CreatedDate = post.CreatedDate,
+          LastUpdate = post.LastUpdate
+        };
+
+        if (post.CreatedBy.HasValue)
+        {
+          var user = await _context.Users.FindAsync(post.CreatedBy.Value);
+          if (user != null)
+          {
+            postDto.CreatedBy = new PublicUserRelationDTO
+            {
+              Id = user.Id,
+              User1 = user.User1,
+              FirstName = user.FirstName,
+              LastName = user.LastName
+            };
+          }
+        }
+
+        postDtos.Add(postDto);
+      }
+
+      return Ok(new { data = postDtos });
     }
 
     [HttpGet("{id}")]
     public async Task<IActionResult> GetPostId(int id)
     {
       var post = await _context.Posts.FindAsync(id);
+      if (post == null)
+        return NotFound(new { message = "Post no encontrado" });
 
-      if (post == null) return NotFound(new {message = "Post no encontrado"});
-      return Ok(new { data = post });
+      var postDto = new PublicPostDTO
+      {
+        Id = post.Id,
+        Title = post.Title,
+        Description = post.Description,
+        JsonPersonalizacion = post.JsonPersonalizacion,
+        ImageUrls = !string.IsNullOrEmpty(post.ImageUrls) ? post.ImageUrls.Split(',').ToList() : null,
+        CreatedDate = post.CreatedDate,
+        LastUpdate = post.LastUpdate
+      };
+
+      if (post.CreatedBy.HasValue)
+      {
+        var user = await _context.Users.FindAsync(post.CreatedBy.Value);
+
+        if (user != null)
+        {
+          postDto.CreatedBy = new PublicUserRelationDTO
+          {
+            Id = user.Id,
+            User1 = user.User1,
+            FirstName = user.FirstName,
+            LastName = user.LastName
+          };
+        }
+      }
+
+      return Ok(new { data = postDto });
     }
-
 
     [HttpPost]
     public async Task<IActionResult> CreatePost([FromForm] PostDTO postDto)
@@ -54,60 +109,111 @@ namespace VisualNetworkAPI.Controllers
       }
 
       var imageUrls = new List<string>();
-
       foreach (var image in postDto.Images)
       {
         if (image.Length == 0) continue;
-
         var fileName = $"{Guid.NewGuid()}{Path.GetExtension(image.FileName)}";
         var imagePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", fileName);
-
         using (var stream = new FileStream(imagePath, FileMode.Create))
         {
           await image.CopyToAsync(stream);
         }
-
         imageUrls.Add($"/images/{fileName}");
       }
+
+      var userId = GetLoggedInUserId();
 
       var post = new Post
       {
         Title = postDto.Title,
         Description = postDto.Description,
         JsonPersonalizacion = postDto.JsonPersonalizacion,
-        CreatedBy = GetLoggedInUserId(),
+        CreatedBy = userId,
         CreatedDate = DateTime.Now,
         LastUpdate = DateTime.Now,
-        ImageUrls = string.Join(",", imageUrls) // Guardas las URLs separadas por coma
+        ImageUrls = string.Join(",", imageUrls)
       };
 
       _context.Posts.Add(post);
       await _context.SaveChangesAsync();
 
-      return CreatedAtAction(nameof(GetPostId), new { id = post.Id }, new { data = post });
+      var user = await _context.Users.FindAsync(userId);
+
+      var publicPostDto = new PublicPostDTO
+      {
+        Id = post.Id,
+        Title = post.Title,
+        Description = post.Description,
+        JsonPersonalizacion = post.JsonPersonalizacion,
+        ImageUrls = imageUrls,
+        CreatedDate = post.CreatedDate,
+        LastUpdate = post.LastUpdate
+      };
+
+      if (user != null)
+      {
+        publicPostDto.CreatedBy = new PublicUserRelationDTO
+        {
+          Id = user.Id,
+          User1 = user.User1,
+          FirstName = user.FirstName,
+          LastName = user.LastName
+        };
+      }
+
+      return CreatedAtAction(nameof(GetPostId), new { id = post.Id }, new { data = publicPostDto });
     }
 
     [HttpPut("{id}")]
-    public async Task<IActionResult> UpdatePost(int id, [FromBody] Post post)
+    public async Task<IActionResult> UpdatePost(int id, [FromBody] UpdatePostDTO updateDto)
     {
-      if (!ModelState.IsValid) return BadRequest(ModelState);
-
+      if (!ModelState.IsValid)
+        return BadRequest(ModelState);
 
       var postToUpdate = await _context.Posts.FindAsync(id);
+      if (postToUpdate == null)
+        return NotFound(new { message = "Post no encontrado" });
 
-      if (postToUpdate == null) return NotFound(new { message = "Post no encontrado " });
+      // Verificar que el usuario actual sea el creador del post
+      var currentUserId = GetLoggedInUserId();
+      if (postToUpdate.CreatedBy != currentUserId)
+        return Forbid(new { message = "No tienes permiso para editar este post" }.ToString());
 
-      postToUpdate.Description = post.Description;
-      postToUpdate.Title = post.Title;
-      postToUpdate.JsonPersonalizacion = post.JsonPersonalizacion;
-      postToUpdate.ImageUrls = post.ImageUrls;
+      postToUpdate.Description = updateDto.Description;
+      postToUpdate.Title = updateDto.Title;
+      postToUpdate.JsonPersonalizacion = updateDto.JsonPersonalizacion;
+
       postToUpdate.LastUpdate = DateTime.Now;
+      postToUpdate.ImageUrls = postToUpdate.ImageUrls;
 
       _context.Entry(postToUpdate).State = EntityState.Modified;
       await _context.SaveChangesAsync();
 
-      return Ok(new { data = postToUpdate });
+      var user = await _context.Users.FindAsync(postToUpdate.CreatedBy);
 
+      var publicPostDto = new PublicPostDTO
+      {
+        Id = postToUpdate.Id,
+        Title = postToUpdate.Title,
+        Description = postToUpdate.Description,
+        JsonPersonalizacion = postToUpdate.JsonPersonalizacion,
+        
+        CreatedDate = postToUpdate.CreatedDate,
+        LastUpdate = postToUpdate.LastUpdate
+      };
+
+      if (user != null)
+      {
+        publicPostDto.CreatedBy = new PublicUserRelationDTO
+        {
+          Id = user.Id,
+          User1 = user.User1,
+          FirstName = user.FirstName,
+          LastName = user.LastName
+        };
+      }
+
+      return Ok(new { data = publicPostDto });
     }
 
     [HttpDelete("{id}")]
@@ -117,16 +223,18 @@ namespace VisualNetworkAPI.Controllers
 
       if (postToDelete == null) return NotFound(new { message = "Post no encontrado" });
 
+      var currentUserId = GetLoggedInUserId();
+      if (postToDelete.CreatedBy != currentUserId)
+        return Forbid(new { message = "No tienes permiso para editar este post" }.ToString());
+
+
       _context.Posts.Remove(postToDelete);
       await _context.SaveChangesAsync();
 
       return NoContent();
     }
 
-    // GetAllPostComments
-    // CreatePostComment
-    // UpdatePostComment
-    // DeletePostComment
+
 
     [HttpPost("{postId}/likes")]
     public async Task<IActionResult> LikePost(int postId)
@@ -225,22 +333,58 @@ namespace VisualNetworkAPI.Controllers
     [HttpGet("{postId}/comments")]
     public async Task<IActionResult> GetAllPostComments(int postId)
     {
-      var postExist = await _context.Posts.FindAsync(postId);
-      if (postExist == null) return NotFound(new { message = "Post no encontrado" });
+      // Verificar si el post existe
+      var postExists = await _context.Posts.AnyAsync(p => p.Id == postId);
+      if (!postExists)
+        return NotFound(new { message = "Post no encontrado" });
 
+      // Obtener todos los comentarios del post
       var comments = await _context.Comments
-      .Where(c => c.PostId == postId)
-                .Select(c => new GetCommentDTO
-                {
-                  Id = c.Id,
-                  Description = c.Description,
-                  CreatedBy = c.CreatedBy,
-                  CreatedDate = c.CreatedDate,
-                  LastUpdate = c.LastUpdate
-                })
-                .ToListAsync();
+          .Where(c => c.PostId == postId)
+          .ToListAsync();
 
-      return Ok(new { data = comments });
+      if (!comments.Any())
+        return Ok(new { data = new List<GetCommentDTO>() });
+
+      // Obtener todos los IDs de usuarios creadores como strings
+      var creatorIds = comments
+          .Where(c => !string.IsNullOrEmpty(c.CreatedBy))
+          .Select(c => c.CreatedBy)
+          .Distinct()
+          .ToList();
+
+      // Cargar todos los usuarios creadores de una vez
+      // Asumiendo que c.CreatedBy contiene el ID del usuario como string
+      var userIds = creatorIds.Select(id => int.Parse(id)).ToList();
+      var users = await _context.Users
+          .Where(u => userIds.Contains(u.Id))
+          .ToDictionaryAsync(u => u.Id.ToString());
+
+      // Crear los DTOs con la información de usuarios
+      var commentsDTO = comments.Select(c => {
+        var commentDTO = new GetCommentDTO
+        {
+          Id = c.Id,
+          Description = c.Description,
+          CreatedDate = c.CreatedDate,
+          LastUpdate = c.LastUpdate
+        };
+
+        if (!string.IsNullOrEmpty(c.CreatedBy) && users.TryGetValue(c.CreatedBy, out var user))
+        {
+          commentDTO.CreatedBy = new PublicUserRelationDTO
+          {
+            Id = user.Id,
+            User1 = user.User1,
+            FirstName = user.FirstName,
+            LastName = user.LastName
+          };
+        }
+
+        return commentDTO;
+      }).ToList();
+
+      return Ok(new { data = commentsDTO });
     }
 
     // POST: api/Post/{postId}/comments
@@ -253,11 +397,13 @@ namespace VisualNetworkAPI.Controllers
       if (!postExists) return NotFound(new { message = "Publicación no encontrada" });
 
 
+      var userId = GetLoggedInUserId();
+
       var newComment = new Comment
       {
         PostId = postId,
         Description = commentDto.Description,
-        CreatedBy = GetLoggedInUsername(),
+        CreatedBy = userId.ToString(),
         CreatedDate = DateTime.UtcNow,
         LastUpdate = DateTime.UtcNow
       };
@@ -269,97 +415,24 @@ namespace VisualNetworkAPI.Controllers
       {
         Id = newComment.Id,
         Description = newComment.Description,
-        CreatedBy = newComment.CreatedBy, // Include CreatedBy in the response
         CreatedDate = newComment.CreatedDate,
         LastUpdate = newComment.LastUpdate
       };
 
+      var user = await _context.Users.FindAsync(userId);
+      if (user != null)
+      {
+        createdCommentDto.CreatedBy = new PublicUserRelationDTO
+        {
+          Id = user.Id,
+          User1 = user.User1,
+          FirstName = user.FirstName,
+          LastName = user.LastName
+        };
+      }
+
       return CreatedAtAction(nameof(GetAllPostComments), new { postId = postId }, new { data = createdCommentDto });
     }
-
-
-
-    /* TODO: Access
-    POST    /api/Access/register
-    POST    /api/Access/login
-    POST    /api/Access/refresh-token
-    POST    /api/Access/logout
-    */
-
-    /* TODO: User
-    GET     /api/User
-    GET     /api/User/{id}
-    PUT     /api/User/{id}
-    DELETE  /api/User/{id}
-    */
-
-    /* TODO: Followers
-    GET     /api/User/{id}/Followers
-    GET     /api/User/{id}/Following
-    // PENDING: READY
-    POST    /api/User/{id}/Followers - R
-    DELETE  /api/User/{id}/Followers/{followerId} - R
-    */
-
-    /* TODO: Like Post
-    GET     /api/User/{id}/liked-posts
-    // PENDING: READY
-    POST    /api/Post/{postId}/likes - R
-    DELETE  /api/Post/{postId}/likes/{userId} - R
-    GET     /api/Post/{postId}/likes - R 
-    */
-
-    /* TODO: Post
-    GET     /api/Post
-    GET     /api/Post/{id}
-    POST    /api/Post
-    PUT     /api/Post/{id}
-    DELETE  /api/Post/{id}
-    // PENDING: READY
-    GET     /api/User/{userId}/posts - Get posts of a user - R 
-    */
-
-    /* TODO: Comments
-    GET     /api/Post/{postId}/comments
-    PUT     /api/Post/{postId}/comments   // DELETE THIS EP, REPLACED BY PUT COMMENT
-    // PENDING: READY
-    POST    /api/Post/{postId}/comments - Crear un comment - R
-    GET     /api/Comments/{commentId} - Obtener un comment - R
-    PUT     /api/Comments/{commentId} - Editar un comment - R
-    DELETE  /api/Comments/{commentId} - Borrar un comment - R
-    */
-
-    /* TODO: Board
-    GET     /api/Board
-    POST    /api/Board
-    PUT     /api/Board/{id}
-    DELETE  /api/Board/{id}
-    */
-
-    /* TODO: Board_Post
-    // PENDING: READY
-    POST    /api/Board/{boardId}/posts        // Add a post to a board - R
-    GET     /api/Board/{boardId}/posts        // Get all posts on a specific board - R
-    DELETE  /api/Board/{boardId}/posts/{postId} // Remove a post from a board - R
-    */
-
-    /* TODO: Tag
-    // PENDING:
-    POST    /api/Tag
-    GET     /api/Tag
-    GET     /api/Tag/{id}
-    PUT     /api/Tag/{id}
-    DELETE  /api/Tag/{id}
-    */
-
-    /* TODO: Post_Tag
-    // PENDING:
-    POST    /api/Post/{postId}/tags       // Add a tag to a post
-    GET     /api/Post/{postId}/tags       // Get all tags for a post
-    GET     /api/Tag/{tagId}/posts        // Get all posts for a specific tag
-    DELETE  /api/Post/{postId}/tags/{tagId} // Remove a tag from a post
-    */
-
 
   }
 }

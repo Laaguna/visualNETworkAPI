@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "uiwRYMRYvXfpdRuml3XSjM3uIVPaEm86Nv8ysJJmJuA=",
+  "Hash": "NF9xaOUvy7R/Ia6kLmyo7MmFU9BXX8TK9/ce1JTs0tU=",
   "Source": "VisualNetworkAPI",
   "BasePath": "_content/VisualNetworkAPI",
   "Mode": "Default",
@@ -53,6 +53,25 @@
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot\\images\\191a57c3-727e-4fc8-85b2-63ff4a830bac.png"
+    },
+    {
+      "Identity": "E:\\Github\\VisualNetworkAPI\\VisualNetworkAPI\\wwwroot\\images\\215c06b4-4cf2-4cdf-b630-dd26f0c12f68.jpg",
+      "SourceId": "VisualNetworkAPI",
+      "SourceType": "Discovered",
+      "ContentRoot": "E:\\Github\\VisualNetworkAPI\\VisualNetworkAPI\\wwwroot\\",
+      "BasePath": "_content/VisualNetworkAPI",
+      "RelativePath": "images/215c06b4-4cf2-4cdf-b630-dd26f0c12f68.jpg",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "PreferTarget",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\images\\215c06b4-4cf2-4cdf-b630-dd26f0c12f68.jpg"
     },
     {
       "Identity": "E:\\Github\\VisualNetworkAPI\\VisualNetworkAPI\\wwwroot\\images\\bba80721-d20d-4094-80e3-6c7978f09de4.jpg",
@@ -110,6 +129,25 @@
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot\\images\\cc9af6e5-85e2-4ebf-b22d-a65644e636ba.jpg"
+    },
+    {
+      "Identity": "E:\\Github\\VisualNetworkAPI\\VisualNetworkAPI\\wwwroot\\images\\f6c1843e-2e01-4022-933e-0eb9cef553ef.png",
+      "SourceId": "VisualNetworkAPI",
+      "SourceType": "Discovered",
+      "ContentRoot": "E:\\Github\\VisualNetworkAPI\\VisualNetworkAPI\\wwwroot\\",
+      "BasePath": "_content/VisualNetworkAPI",
+      "RelativePath": "images/f6c1843e-2e01-4022-933e-0eb9cef553ef.png",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "PreferTarget",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\images\\f6c1843e-2e01-4022-933e-0eb9cef553ef.png"
     }
   ]
 }

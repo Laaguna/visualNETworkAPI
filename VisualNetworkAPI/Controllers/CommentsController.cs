@@ -32,10 +32,21 @@ namespace VisualNetworkAPI.Controllers
       {
         Id = comment.Id,
         Description = comment.Description,
-        CreatedBy = comment.CreatedBy,
         CreatedDate = comment.CreatedDate,
         LastUpdate = comment.LastUpdate
       };
+
+      var user = await _context.Users.FindAsync(int.Parse(comment.CreatedBy));
+      if (user != null)
+      {
+        commentDto.CreatedBy = new PublicUserRelationDTO
+        {
+          Id = user.Id,
+          User1 = user.User1,
+          FirstName = user.FirstName,
+          LastName = user.LastName
+        };
+      }
 
       return Ok(new { data = commentDto });
     }
@@ -70,7 +81,6 @@ namespace VisualNetworkAPI.Controllers
       {
         Id = commentToUpdate.Id,
         Description = commentToUpdate.Description,
-        CreatedBy = commentToUpdate.CreatedBy,
         CreatedDate = commentToUpdate.CreatedDate,
         LastUpdate = commentToUpdate.LastUpdate
       };

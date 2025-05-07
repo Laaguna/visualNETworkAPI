@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using VisualNetworkAPI.Models;
 using Microsoft.AspNetCore.Authorization;
 using VisualNetworkAPI.Models.DTOs;
+using VisualNetworkAPI.Models.DTOs.Board;
 
 namespace VisualNetworkAPI.Controllers
 {
@@ -163,6 +164,29 @@ namespace VisualNetworkAPI.Controllers
           .ToListAsync();
 
       return Ok(new { data = userPosts });
+    }
+
+    [HttpGet("{userId}/boards")]
+    public async Task<IActionResult> GetUserBoards(int userId)
+    {
+      var userExists = await _context.Users.AnyAsync(u => u.Id == userId);
+      if (!userExists)
+      {
+        return NotFound(new { message = "Usuario no encontrado" });
+      }
+
+      var userBoards = await _context.Boards
+        .Where(p => p.CreatedBy == userId.ToString())
+        .Select(p => new PublicBoardDTO
+        {
+          Id = p.Id,
+          Description = p.Description,
+          Decoration = p.Decoration,
+          CreatedDate = p.CreatedDate,
+          LastUpdate = p.LastUpdate,
+        }).ToListAsync();
+
+      return Ok(new { data = userBoards });
     }
 
     [HttpGet("{id}/followers")]

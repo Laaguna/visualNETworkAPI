@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-
 namespace VisualNetworkAPI.Models;
 
 public partial class User

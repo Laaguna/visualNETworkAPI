@@ -286,7 +286,7 @@ public partial class VisualNetworkContext : DbContext
         {
             entity.HasKey(e => e.Id).HasName("PK__user__3213E83FDA174AEF");
 
-            entity.ToTable("user");
+            entity.ToTable("users");
 
             entity.HasIndex(e => e.Email, "IX_User_Email").IsUnique();
 

@@ -1,54 +1,53 @@
 version: "3.9"
 
 services:
-    db:
-        image: mcr.microsoft.com/mssql/server:2022-latest
-        container_name: sqlserver
-        environment:
-            SA_PASSWORD: "${SA_PASSWORD}"
-            ACCEPT_EULA: "${ACCEPT_EULA}"
-        ports:
-            - "1433:1433"
-        volumes:
-            - sql_data:/var/opt/mssql
-        networks:
-            - app-network
+  db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: sqlserver
+    environment:
+      SA_PASSWORD: "${SA_PASSWORD}"
+      ACCEPT_EULA: "${ACCEPT_EULA}"
+    ports:
+      - "1433:1433"
+    volumes:
+      - sql_data:/var/opt/mssql
+    networks:
+      - app-network
 
-    backend:
-        build:
-            context: ./VisualNetworkAPI
-            dockerfile: Dockerfile
-            args: # Agrega esta sección
-                configuration: "Docker"
-        container_name: backend
-        depends_on:
-            - db
-        environment:
-            ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT}
-            #ConnectionStrings__SQLServer: "Server=db;Database=${DB_NAME};User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True;" # Ya no es necesario aquí
-        ports:
-            - "${BACKEND_PORT}:80"
-        volumes:
-            - ./VisualNetworkAPI/wwwroot/images:/App/wwwroot/images
-        networks:
-            - app-network
+  backend:
+    build:
+      context: ./VisualNetworkAPI
+      dockerfile: Dockerfile
+    container_name: visualnetwork-api
+    depends_on:
+      - db
+    environment:
+      ASPNETCORE_ENVIRONMENT: "${ASPNETCORE_ENVIRONMENT}"
+      ASPNETCORE_URLS: "http://+:80"
+      ConnectionStrings__SQLServer: "Server=db;Database=${DB_NAME};User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True;"
+    ports:
+      - "${BACKEND_PORT}:80"
+    volumes:
+      - ./VisualNetworkAPI/wwwroot/images:/App/wwwroot/images
+    networks:
+      - app-network
 
-    nginx:
-        image: nginx:alpine
-        container_name: nginx
-        depends_on:
-            - backend
-        ports:
-            - "${NGINX_PORT}:80"
-        volumes:
-            - ./nginx.conf:/etc/nginx/nginx.conf:ro
-            - ./backend/wwwroot/images:/usr/share/nginx/html/images:ro
-        networks:
-            - app-network
+  nginx:
+    image: nginx:alpine
+    container_name: visualnetwork-nginx
+    depends_on:
+      - backend
+    ports:
+      - "${NGINX_PORT}:80"
+    volumes:
+    - ./nginx/conf.d/default.conf:/etc/nginx/conf.d/default.conf:ro
+    - ./VisualNetworkAPI/wwwroot/images:/usr/share/nginx/html/images:ro
+    networks:
+      - app-network
 
 volumes:
-    sql_data:
+  sql_data:
 
 networks:
-    app-network:
-        driver: bridge
+  app-network:
+    driver: bridge

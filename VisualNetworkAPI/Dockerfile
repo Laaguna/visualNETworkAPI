@@ -6,23 +6,18 @@ WORKDIR /App
 COPY . ./
 RUN dotnet restore
 
-# Publicar en modo release
+# Publicar en modo Release
 RUN dotnet publish -c Release -o out
 
 # Etapa 2: runtime
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 WORKDIR /App
 
-# Copiar archivos publicados desde la etapa build
+# Copiar artefactos publicados desde la etapa build
 COPY --from=build /App/out .
 
-# Copiar el archivo de configuración correcto
-ARG configuration=Release
-RUN echo "Current Configuration: $configuration"
-COPY VisualNetworkAPI/appsettings${configuration}.json /App/appsettings.json
-
-# Expone el puerto 80 dentro del contenedor
+# Exponer el puerto 80 dentro del contenedor
 EXPOSE 80
 
-# Comando de entrada
+# Comando de inicio
 ENTRYPOINT ["dotnet", "VisualNetworkAPI.dll"]

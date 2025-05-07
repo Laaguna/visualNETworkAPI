@@ -83,7 +83,7 @@
     "Parameters": [
       {
         "Name": "board",
-        "Type": "VisualNetworkAPI.Models.Board",
+        "Type": "VisualNetworkAPI.Models.DTOs.PostBoardDTO",
         "IsRequired": true
       }
     ],
@@ -334,8 +334,8 @@
         "IsRequired": true
       },
       {
-        "Name": "post",
-        "Type": "VisualNetworkAPI.Models.Post",
+        "Name": "updateDto",
+        "Type": "VisualNetworkAPI.Models.DTOs.UpdatePostDTO",
         "IsRequired": true
       }
     ],
@@ -732,6 +732,22 @@
     "Parameters": [
       {
         "Name": "id",
+        "Type": "System.Int32",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "VisualNetworkAPI.Controllers.UserController",
+    "Method": "GetUserBoards",
+    "RelativePath": "api/User/{userId}/boards",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "userId",
         "Type": "System.Int32",
         "IsRequired": true
       }
