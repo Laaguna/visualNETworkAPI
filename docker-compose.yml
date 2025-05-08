@@ -1,53 +1,58 @@
-version: "3.9"
-
+version: '3.8'
 services:
+  # Servicio de backend en .NET
+  backend:
+    build:
+      context: ./visualNetworkAPI
+      dockerfile: Dockerfile
+    container_name: visualnetwork-api
+    restart: always
+    ports:
+      - "5295:80"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ConnectionStrings__SQLServer: Server=db;Database=visualNetWork;User Id=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=True;
+    volumes:
+      - ./uploaded_files:/App/wwwroot
+    depends_on:
+      - db
+    networks:
+      - visualnetwork
+
+  # Servicio de Nginx para servir archivos estáticos
+  nginx:
+    image: nginx:latest
+    container_name: visualnetwork-nginx
+    restart: always
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./uploaded_files:/var/www/files
+    depends_on:
+      - backend
+    networks:
+      - visualnetwork
+
+  # Servicio de base de datos SQL Server
   db:
     image: mcr.microsoft.com/mssql/server:2022-latest
-    container_name: sqlserver
+    container_name: visualnetwork-db
+    restart: always
     environment:
-      SA_PASSWORD: "${SA_PASSWORD}"
-      ACCEPT_EULA: "${ACCEPT_EULA}"
+      ACCEPT_EULA: "Y"
+      SA_PASSWORD: "YourStrong@Passw0rd"
+      MSSQL_PID: "Express"
     ports:
       - "1433:1433"
     volumes:
-      - sql_data:/var/opt/mssql
+      - dbdata:/var/opt/mssql
     networks:
-      - app-network
-
-  backend:
-    build:
-      context: ./VisualNetworkAPI
-      dockerfile: Dockerfile
-    container_name: visualnetwork-api
-    depends_on:
-      - db
-    environment:
-      ASPNETCORE_ENVIRONMENT: "${ASPNETCORE_ENVIRONMENT}"
-      ASPNETCORE_URLS: "http://+:80"
-      ConnectionStrings__SQLServer: "Server=db;Database=${DB_NAME};User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True;"
-    ports:
-      - "${BACKEND_PORT}:80"
-    volumes:
-      - ./VisualNetworkAPI/wwwroot/images:/App/wwwroot/images
-    networks:
-      - app-network
-
-  nginx:
-    image: nginx:alpine
-    container_name: visualnetwork-nginx
-    depends_on:
-      - backend
-    ports:
-      - "${NGINX_PORT}:80"
-    volumes:
-    - ./nginx/conf.d/default.conf:/etc/nginx/conf.d/default.conf:ro
-    - ./VisualNetworkAPI/wwwroot/images:/usr/share/nginx/html/images:ro
-    networks:
-      - app-network
-
-volumes:
-  sql_data:
+      - visualnetwork
 
 networks:
-  app-network:
+  visualnetwork:
     driver: bridge
+
+volumes:
+  dbdata:

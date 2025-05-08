@@ -1,5 +1,4 @@
 <<<<<<< Updated upstream
-E:/Github/VisualNetworkAPI/VisualNetworkAPI/bin/Debug/net8.0/appsettings.Development.json
 E:/Github/VisualNetworkAPI/VisualNetworkAPI/bin/Debug/net8.0/appsettings.json
 E:/Github/VisualNetworkAPI/VisualNetworkAPI/bin/Debug/net8.0/VisualNetworkAPI.exe
 E:/Github/VisualNetworkAPI/VisualNetworkAPI/bin/Debug/net8.0/VisualNetworkAPI.deps.json
@@ -339,7 +338,6 @@ E:/Github/VisualNetworkAPI/VisualNetworkAPI/obj/Debug/net8.0/ref/VisualNetworkAP
 /home/laguna/Documentos/GitHub/visualNETworkAPI/VisualNetworkAPI/obj/Debug/net8.0/VisualNetworkAPI.genruntimeconfig.cache
 /home/laguna/Documentos/GitHub/visualNETworkAPI/VisualNetworkAPI/obj/Debug/net8.0/ref/VisualNetworkAPI.dll
 =======
-E:\Github\VisualNetworkAPI\VisualNetworkAPI\bin\Debug\net8.0\appsettings.Development.json
 E:\Github\VisualNetworkAPI\VisualNetworkAPI\bin\Debug\net8.0\appsettings.json
 E:\Github\VisualNetworkAPI\VisualNetworkAPI\bin\Debug\net8.0\VisualNetworkAPI.exe
 E:\Github\VisualNetworkAPI\VisualNetworkAPI\bin\Debug\net8.0\VisualNetworkAPI.deps.json
@@ -511,4 +509,3 @@ E:\Github\VisualNetworkAPI\VisualNetworkAPI\obj\Debug\net8.0\ref\VisualNetworkAP
 E:\Github\VisualNetworkAPI\VisualNetworkAPI\obj\Debug\net8.0\VisualNetworkAPI.sourcelink.json
 >>>>>>> Stashed changes
 E:\Github\VisualNetworkAPI\VisualNetworkAPI\bin\Debug\net8.0\VisualNetworkAPI.staticwebassets.runtime.json
-E:\Github\VisualNetworkAPI\VisualNetworkAPI\bin\Debug\net8.0\appsettings.Docker.json

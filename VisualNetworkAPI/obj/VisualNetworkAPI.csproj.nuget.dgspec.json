@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "E:\\Github\\VisualNetworkAPI\\VisualNetworkAPI\\VisualNetworkAPI.csproj": {}
+    "E:\\Github\\VisualNetworkAPI\\visualNetworkAPI\\VisualNetworkAPI.csproj": {}
   },
   "projects": {
-    "E:\\Github\\VisualNetworkAPI\\VisualNetworkAPI\\VisualNetworkAPI.csproj": {
+    "E:\\Github\\VisualNetworkAPI\\visualNetworkAPI\\VisualNetworkAPI.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "E:\\Github\\VisualNetworkAPI\\VisualNetworkAPI\\VisualNetworkAPI.csproj",
+        "projectUniqueName": "E:\\Github\\VisualNetworkAPI\\visualNetworkAPI\\VisualNetworkAPI.csproj",
         "projectName": "VisualNetworkAPI",
-        "projectPath": "E:\\Github\\VisualNetworkAPI\\VisualNetworkAPI\\VisualNetworkAPI.csproj",
+        "projectPath": "E:\\Github\\VisualNetworkAPI\\visualNetworkAPI\\VisualNetworkAPI.csproj",
         "packagesPath": "C:\\Users\\Laguna\\.nuget\\packages\\",
-        "outputPath": "E:\\Github\\VisualNetworkAPI\\VisualNetworkAPI\\obj\\",
+        "outputPath": "E:\\Github\\VisualNetworkAPI\\visualNetworkAPI\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\Laguna\\AppData\\Roaming\\NuGet\\NuGet.Config",
