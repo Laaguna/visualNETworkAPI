@@ -5,6 +5,9 @@ VisualNetworkAPI/obj/Debug/
 VisualNetworkAPI/obj/Release/
 VisualNetworkAPI/wwwroot/images/*
 !VisualNetworkAPI/wwwroot/images/.gitkeep
+uploaded_files/avatars/*
+!uploaded_files/avatars/blank.svg
+uploaded_files/images/*
 *.user
 *.suo
 *.sln.docstates
