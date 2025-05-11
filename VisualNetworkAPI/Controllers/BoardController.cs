@@ -6,6 +6,7 @@ using Microsoft.Extensions.Hosting;
 using VisualNetworkAPI.Models;
 using VisualNetworkAPI.Models.DTOs;
 using VisualNetworkAPI.Models.DTOs.Board;
+using VisualNetworkAPI.Paginated;
 
 namespace VisualNetworkAPI.Controllers
 {
@@ -22,39 +23,68 @@ namespace VisualNetworkAPI.Controllers
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetAllBoards()
-    {
-      var boards = await _context.Boards.ToListAsync();
+  public async Task<IActionResult> GetAllBoards([FromQuery] int pageIndex = 1, [FromQuery] int pageSize = 10)
+  {
+      // Aplicar paginación a nivel de consulta con AsNoTracking para mejorar rendimiento
+      var paginatedBoards = await _context.Boards
+          .AsNoTracking()
+          .OrderByDescending(b => b.CreatedDate) // Ordenar por fecha de creación (ajusta según necesites)
+          .ToPaginatedListAsync(pageIndex, pageSize);
+      
       var boardsDTO = new List<PublicBoardDTO>();
-
-      foreach (var board in boards)
+      
+      // Optimización: Obtener todos los userIds de una vez para hacer una sola consulta
+      var userIds = paginatedBoards.Items
+          .Select(b => int.Parse(b.CreatedBy))
+          .Distinct()
+          .ToList();
+      
+      // Cargar todos los usuarios relacionados en una sola consulta
+      var users = await _context.Users
+          .AsNoTracking()
+          .Where(u => userIds.Contains(u.Id))
+          .ToDictionaryAsync(u => u.Id);
+      
+      foreach (var board in paginatedBoards.Items)
       {
-        var boardDTO = new PublicBoardDTO
-        {
-          Id = board.Id,
-          Decoration = board.Decoration,
-          Description = board.Description,
-          CreatedDate = board.CreatedDate,
-          LastUpdate = board.LastUpdate
-        };
-
-        var user = await _context.Users.FindAsync(int.Parse(board.CreatedBy));
-        if (user != null)
-        {
-          boardDTO.CreatedBy = new PublicUserRelationDTO
+          var boardDTO = new PublicBoardDTO
           {
-            Id = user.Id,
-            User1 = user.User1,
-            FirstName = user.FirstName,
-            LastName = user.LastName,
-            Avatar = user.Avatar,
+              Id = board.Id,
+              Decoration = board.Decoration,
+              Description = board.Description,
+              CreatedDate = board.CreatedDate,
+              LastUpdate = board.LastUpdate
           };
-        }
-        boardsDTO.Add(boardDTO);
-    }
 
-      return Ok(new { data = boardsDTO }); 
-    }
+          // Usar el diccionario de usuarios en lugar de consultar cada uno
+          if (int.TryParse(board.CreatedBy, out var userId) && users.TryGetValue(userId, out var user))
+          {
+              boardDTO.CreatedBy = new PublicUserRelationDTO
+              {
+                  Id = user.Id,
+                  User1 = user.User1,
+                  FirstName = user.FirstName,
+                  LastName = user.LastName,
+                  Avatar = user.Avatar,
+              };
+          }
+          
+          boardsDTO.Add(boardDTO);
+      }
+
+      // Retornar datos paginados con metadatos de paginación
+      return Ok(new 
+      { 
+          success = true,
+          data = boardsDTO,
+          pageIndex = paginatedBoards.PageIndex,
+          pageSize = paginatedBoards.PageSize,
+          totalCount = paginatedBoards.TotalCount,
+          totalPages = paginatedBoards.TotalPages,
+          hasPreviousPage = paginatedBoards.HasPreviousPage,
+          hasNextPage = paginatedBoards.HasNextPage
+      });
+  }
 
     [HttpGet("{id}")]
     public async Task<IActionResult> GetBoardById(int id)

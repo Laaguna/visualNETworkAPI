@@ -1,28 +1,25 @@
 {
   "format": 1,
   "restore": {
-    "E:\\Github\\VisualNetworkAPI\\visualNetworkAPI\\VisualNetworkAPI.csproj": {}
+    "/home/laguna/Documentos/GitHub/visualNETworkAPI/VisualNetworkAPI/VisualNetworkAPI.csproj": {}
   },
   "projects": {
-    "E:\\Github\\VisualNetworkAPI\\visualNetworkAPI\\VisualNetworkAPI.csproj": {
+    "/home/laguna/Documentos/GitHub/visualNETworkAPI/VisualNetworkAPI/VisualNetworkAPI.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "E:\\Github\\VisualNetworkAPI\\visualNetworkAPI\\VisualNetworkAPI.csproj",
+        "projectUniqueName": "/home/laguna/Documentos/GitHub/visualNETworkAPI/VisualNetworkAPI/VisualNetworkAPI.csproj",
         "projectName": "VisualNetworkAPI",
-        "projectPath": "E:\\Github\\VisualNetworkAPI\\visualNetworkAPI\\VisualNetworkAPI.csproj",
-        "packagesPath": "C:\\Users\\Laguna\\.nuget\\packages\\",
-        "outputPath": "E:\\Github\\VisualNetworkAPI\\visualNetworkAPI\\obj\\",
+        "projectPath": "/home/laguna/Documentos/GitHub/visualNETworkAPI/VisualNetworkAPI/VisualNetworkAPI.csproj",
+        "packagesPath": "/home/laguna/.nuget/packages/",
+        "outputPath": "/home/laguna/Documentos/GitHub/visualNETworkAPI/VisualNetworkAPI/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "C:\\Users\\Laguna\\AppData\\Roaming\\NuGet\\NuGet.Config",
-          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+          "/home/laguna/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net8.0"
         ],
         "sources": {
-          "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
-          "C:\\Program Files\\dotnet\\library-packs": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
@@ -35,11 +32,6 @@
           "warnAsError": [
             "NU1605"
           ]
-        },
-        "restoreAuditProperties": {
-          "enableAudit": "true",
-          "auditLevel": "low",
-          "auditMode": "direct"
         }
       },
       "frameworks": {
@@ -84,7 +76,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.401/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/usr/lib/dotnet/sdk/8.0.115/PortableRuntimeIdentifierGraph.json"
         }
       }
     }

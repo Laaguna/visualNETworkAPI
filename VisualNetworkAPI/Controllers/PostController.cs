@@ -7,6 +7,7 @@ using VisualNetworkAPI.Models;
 using VisualNetworkAPI.Models.DTOs;
 using VisualNetworkAPI.Models.DTOs.Board;
 using VisualNetworkAPI.Models.DTOs.Comments;
+using VisualNetworkAPI.Paginated;
 
 namespace VisualNetworkAPI.Controllers
 {
@@ -24,45 +25,71 @@ namespace VisualNetworkAPI.Controllers
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetAllPosts()
-    {
-      var posts = await _context.Posts.ToListAsync();
-      var postDtos = new List<PublicPostDTO>();
+public async Task<IActionResult> GetAllPosts([FromQuery] int pageIndex = 1, [FromQuery] int pageSize = 10)
+{
+    // Usar AsNoTracking() para mejorar el rendimiento cuando solo leemos datos
+    var paginatedPosts = await _context.Posts
+        .AsNoTracking()
+        .OrderByDescending(p => p.CreatedDate) // Añadido ordenamiento por fecha
+        .ToPaginatedListAsync(pageIndex, pageSize);
+    
+    var postDtos = new List<PublicPostDTO>();
 
-      foreach (var post in posts)
-      {
+      // Optimización: Obtener todos los userIds para hacer una única consulta
+#pragma warning disable CS8629 // Un tipo que acepta valores NULL puede ser nulo.
+      var userIds = paginatedPosts.Items
+        .Where(p => p.CreatedBy.HasValue)
+        .Select(p => p.CreatedBy.Value)
+        .Distinct()
+        .ToList();
+#pragma warning restore CS8629 // Un tipo que acepta valores NULL puede ser nulo.
+
+      // Cargar todos los usuarios relacionados en una sola consulta
+      var users = await _context.Users
+        .AsNoTracking()
+        .Where(u => userIds.Contains(u.Id))
+        .ToDictionaryAsync(u => u.Id);
+    
+    foreach (var post in paginatedPosts.Items)
+    {
         var postDto = new PublicPostDTO
         {
-          Id = post.Id,
-          Title = post.Title,
-          Description = post.Description,
-          JsonPersonalizacion = post.JsonPersonalizacion,
-          ImageUrls = !string.IsNullOrEmpty(post.ImageUrls) ? post.ImageUrls.Split(',').ToList() : null,
-          CreatedDate = post.CreatedDate,
-          LastUpdate = post.LastUpdate
+            Id = post.Id,
+            Title = post.Title,
+            Description = post.Description,
+            JsonPersonalizacion = post.JsonPersonalizacion,
+            ImageUrls = !string.IsNullOrEmpty(post.ImageUrls) ? post.ImageUrls.Split(',').ToList() : null,
+            CreatedDate = post.CreatedDate,
+            LastUpdate = post.LastUpdate
         };
 
-        if (post.CreatedBy.HasValue)
+        if (post.CreatedBy.HasValue && users.TryGetValue(post.CreatedBy.Value, out var user))
         {
-          var user = await _context.Users.FindAsync(post.CreatedBy.Value);
-          if (user != null)
-          {
             postDto.CreatedBy = new PublicUserRelationDTO
             {
-              Id = user.Id,
-              User1 = user.User1,
-              FirstName = user.FirstName,
-              Avatar = user.Avatar,
-              LastName = user.LastName
+                Id = user.Id,
+                User1 = user.User1,
+                FirstName = user.FirstName,
+                Avatar = user.Avatar,
+                LastName = user.LastName
             };
-          }
         }
 
         postDtos.Add(postDto);
-      }
-
-      return Ok(new { data = postDtos });
     }
+
+    return Ok(new 
+    { 
+        success = true,
+        data = postDtos,
+        pageIndex = paginatedPosts.PageIndex,
+        pageSize = paginatedPosts.PageSize,
+        totalCount = paginatedPosts.TotalCount,
+        totalPages = paginatedPosts.TotalPages,
+        hasPreviousPage = paginatedPosts.HasPreviousPage,
+        hasNextPage = paginatedPosts.HasNextPage
+    });
+}
 
     [HttpGet("{id}")]
     public async Task<IActionResult> GetPostId(int id)
@@ -309,87 +336,116 @@ namespace VisualNetworkAPI.Controllers
     }
 
     [HttpGet("{postId}/likes")]
-    public async Task<IActionResult> GetPostLikes(int postId)
+    public async Task<IActionResult> GetPostLikes(int postId, [FromQuery] int pageIndex = 1, [FromQuery] int pageSize = 10)
     {
-      var postExists = await _context.Posts.AnyAsync(p => p.Id == postId);
-      if (!postExists)
-      {
-        return NotFound(new { message = "Publicación no encontrada" });
-      }
+        var postExists = await _context.Posts.AsNoTracking().AnyAsync(p => p.Id == postId);
+        if (!postExists)
+        {
+            return NotFound(new { message = "Publicación no encontrada" });
+        }
 
-      var likes = await _context.LikePosts
-          .Where(lp => lp.PostId == postId)
-          .Include(lp => lp.User) // Incluye la información del usuario que dio like
-          .Select(lp => new
-          {
-            UserId = lp.UserId,
-            UserName = lp.User.User1, // O las propiedades del usuario que quieras exponer
-            LikedDate = lp.CreatedDate
-            // Puedes agregar más propiedades del usuario si es necesario (nombre, etc.)
-          })
-          .ToListAsync();
+        var paginatedLikes = await _context.LikePosts
+            .AsNoTracking()
+            .Where(lp => lp.PostId == postId)
+            .OrderByDescending(lp => lp.CreatedDate)
+            .Select(lp => new
+            {
+                UserId = lp.UserId,
+                UserName = lp.User.User1,
+                LikedDate = lp.CreatedDate
+            })
+            .ToPaginatedListAsync(pageIndex, pageSize);
 
-      return Ok(new { data = likes });
-    }
+        return Ok(new 
+        { 
+            data = paginatedLikes.Items,
+            pageIndex = paginatedLikes.PageIndex,
+            pageSize = paginatedLikes.PageSize,
+            totalCount = paginatedLikes.TotalCount,
+            totalPages = paginatedLikes.TotalPages,
+            hasPreviousPage = paginatedLikes.HasPreviousPage,
+            hasNextPage = paginatedLikes.HasNextPage
+        });
+}
 
 
     // GET: api/Post/{postId}/comments
     [HttpGet("{postId}/comments")]
-    public async Task<IActionResult> GetAllPostComments(int postId)
+    public async Task<IActionResult> GetAllPostComments(int postId, [FromQuery] int pageIndex = 1, [FromQuery] int pageSize = 10)
     {
-      // Verificar si el post existe
-      var postExists = await _context.Posts.AnyAsync(p => p.Id == postId);
-      if (!postExists)
-        return NotFound(new { message = "Post no encontrado" });
+        // Verificar si el post existe
+        var postExists = await _context.Posts.AsNoTracking().AnyAsync(p => p.Id == postId);
+        if (!postExists)
+            return NotFound(new { message = "Post no encontrado" });
 
-      // Obtener todos los comentarios del post
-      var comments = await _context.Comments
-          .Where(c => c.PostId == postId)
-          .ToListAsync();
+        // Obtener comentarios paginados
+        var paginatedComments = await _context.Comments
+            .AsNoTracking()
+            .Where(c => c.PostId == postId)
+            .OrderByDescending(c => c.CreatedDate)
+            .ToPaginatedListAsync(pageIndex, pageSize);
 
-      if (!comments.Any())
-        return Ok(new { data = new List<GetCommentDTO>() });
+        if (!paginatedComments.Items.Any())
+            return Ok(new 
+            { 
+                data = new List<GetCommentDTO>(),
+                pageIndex = paginatedComments.PageIndex,
+                pageSize = paginatedComments.PageSize,
+                totalCount = paginatedComments.TotalCount,
+                totalPages = paginatedComments.TotalPages,
+                hasPreviousPage = paginatedComments.HasPreviousPage,
+                hasNextPage = paginatedComments.HasNextPage
+            });
 
-      // Obtener todos los IDs de usuarios creadores como strings
-      var creatorIds = comments
-          .Where(c => !string.IsNullOrEmpty(c.CreatedBy))
-          .Select(c => c.CreatedBy)
-          .Distinct()
-          .ToList();
+        // Obtener todos los IDs de usuarios creadores como strings
+        var creatorIds = paginatedComments.Items
+            .Where(c => !string.IsNullOrEmpty(c.CreatedBy))
+            .Select(c => c.CreatedBy)
+            .Distinct()
+            .ToList();
 
-      // Cargar todos los usuarios creadores de una vez
-      // Asumiendo que c.CreatedBy contiene el ID del usuario como string
-      var userIds = creatorIds.Select(id => int.Parse(id)).ToList();
-      var users = await _context.Users
-          .Where(u => userIds.Contains(u.Id))
-          .ToDictionaryAsync(u => u.Id.ToString());
+        // Cargar todos los usuarios creadores de una vez
+        var userIds = creatorIds.Select(id => int.Parse(id)).ToList();
+        var users = await _context.Users
+            .AsNoTracking()
+            .Where(u => userIds.Contains(u.Id))
+            .ToDictionaryAsync(u => u.Id.ToString());
 
-      // Crear los DTOs con la información de usuarios
-      var commentsDTO = comments.Select(c => {
-        var commentDTO = new GetCommentDTO
-        {
-          Id = c.Id,
-          Description = c.Description,
-          CreatedDate = c.CreatedDate,
-          LastUpdate = c.LastUpdate
-        };
+        // Crear los DTOs con la información de usuarios
+        var commentsDTO = paginatedComments.Items.Select(c => {
+            var commentDTO = new GetCommentDTO
+            {
+                Id = c.Id,
+                Description = c.Description,
+                CreatedDate = c.CreatedDate,
+                LastUpdate = c.LastUpdate
+            };
 
-        if (!string.IsNullOrEmpty(c.CreatedBy) && users.TryGetValue(c.CreatedBy, out var user))
-        {
-          commentDTO.CreatedBy = new PublicUserRelationDTO
-          {
-            Id = user.Id,
-            User1 = user.User1,
-            FirstName = user.FirstName,
-            LastName = user.LastName,
-            Avatar = user.Avatar,
-          };
-        }
+            if (!string.IsNullOrEmpty(c.CreatedBy) && users.TryGetValue(c.CreatedBy, out var user))
+            {
+                commentDTO.CreatedBy = new PublicUserRelationDTO
+                {
+                    Id = user.Id,
+                    User1 = user.User1,
+                    FirstName = user.FirstName,
+                    LastName = user.LastName,
+                    Avatar = user.Avatar,
+                };
+            }
 
-        return commentDTO;
-      }).ToList();
+            return commentDTO;
+        }).ToList();
 
-      return Ok(new { data = commentsDTO });
+        return Ok(new 
+        { 
+            data = commentsDTO,
+            pageIndex = paginatedComments.PageIndex,
+            pageSize = paginatedComments.PageSize,
+            totalCount = paginatedComments.TotalCount,
+            totalPages = paginatedComments.TotalPages,
+            hasPreviousPage = paginatedComments.HasPreviousPage,
+            hasNextPage = paginatedComments.HasNextPage
+        });
     }
 
     // POST: api/Post/{postId}/comments

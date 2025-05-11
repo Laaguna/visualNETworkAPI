@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using VisualNetworkAPI.Models;
+using VisualNetworkAPI.Paginated;
 
 namespace VisualNetworkAPI.Controllers
 {
@@ -54,29 +55,38 @@ namespace VisualNetworkAPI.Controllers
     }
 
     [HttpGet("{boardId}/posts")]  
-    public async Task<IActionResult> GetBoardPosts(int boardId)
+    public async Task<IActionResult> GetBoardPosts(int boardId, [FromQuery] int pageIndex = 1, [FromQuery] int pageSize = 10)
     {
-      var boardExists = await _context.Boards.AnyAsync(b => b.Id == boardId);
-      if (!boardExists)
-      {
-        return NotFound(new { message = "Tablero no encontrado" });
-      }
+        var boardExists = await _context.Boards.AsNoTracking().AnyAsync(b => b.Id == boardId);
+        if (!boardExists)
+        {
+            return NotFound(new { message = "Tablero no encontrado" });
+        }
 
-      var boardPosts = await _context.BoardPosts
-          .Where(bp => bp.BoardId == boardId)
-          .Include(bp => bp.Post) // Include the Post data
-          .Select(bp => new
-          {
-            PostId = bp.PostId,
-            PostTitle = bp.Post.Title, // Access Post properties
-            PostDescription = bp.Post.Description,
-            PostImageUrl = bp.Post.ImageUrls,
-            CreatedDate = bp.CreatedDate
-            // Add other post properties as needed.
-          })
-          .ToListAsync();
+        var paginatedBoardPosts = await _context.BoardPosts
+            .AsNoTracking()
+            .Where(bp => bp.BoardId == boardId)
+            .OrderByDescending(bp => bp.CreatedDate) // Orden cronológico inverso
+            .Select(bp => new
+            {
+                PostId = bp.PostId,
+                PostTitle = bp.Post.Title,
+                PostDescription = bp.Post.Description,
+                PostImageUrl = bp.Post.ImageUrls,
+                CreatedDate = bp.CreatedDate
+            })
+            .ToPaginatedListAsync(pageIndex, pageSize);
 
-      return Ok(new { data = boardPosts });
+        return Ok(new 
+        { 
+            data = paginatedBoardPosts.Items,
+            pageIndex = paginatedBoardPosts.PageIndex,
+            pageSize = paginatedBoardPosts.PageSize,
+            totalCount = paginatedBoardPosts.TotalCount,
+            totalPages = paginatedBoardPosts.TotalPages,
+            hasPreviousPage = paginatedBoardPosts.HasPreviousPage,
+            hasNextPage = paginatedBoardPosts.HasNextPage
+        });
     }
 
     [HttpDelete("{boardId}/posts/{postId}")] 

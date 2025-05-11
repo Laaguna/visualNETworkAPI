@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using VisualNetworkAPI.Models;
+using VisualNetworkAPI.Paginated;
 
 namespace VisualNetworkAPI.Controllers
 {
@@ -17,10 +18,23 @@ namespace VisualNetworkAPI.Controllers
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetAllTags()
+    public async Task<IActionResult> GetAllTags([FromQuery] int pageIndex = 1, [FromQuery] int pageSize = 10)
     {
-      var tags = await _context.Tags.ToListAsync();
-      return Ok(new { data = tags });
+        var paginatedTags = await _context.Tags
+            .AsNoTracking()
+            .OrderBy(t => t.Title) // Ordenar alfabéticamente 
+            .ToPaginatedListAsync(pageIndex, pageSize);
+
+        return Ok(new 
+        { 
+            data = paginatedTags.Items,
+            pageIndex = paginatedTags.PageIndex,
+            pageSize = paginatedTags.PageSize,
+            totalCount = paginatedTags.TotalCount,
+            totalPages = paginatedTags.TotalPages,
+            hasPreviousPage = paginatedTags.HasPreviousPage,
+            hasNextPage = paginatedTags.HasNextPage
+        });
     }
 
     [HttpGet("{id}")]

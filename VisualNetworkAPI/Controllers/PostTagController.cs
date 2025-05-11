@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using VisualNetworkAPI.Models;
+using VisualNetworkAPI.Paginated;
 
 namespace VisualNetworkAPI.Controllers
 {
@@ -57,29 +58,39 @@ namespace VisualNetworkAPI.Controllers
     }
 
     // GET: api/Post/{postId}/tags
-    [HttpGet("/api/Post/{postId}/tags")] // Mantiene la ruta original
-    public async Task<IActionResult> GetPostTags(int postId)
+    [HttpGet("/api/Post/{postId}/tags")]
+    public async Task<IActionResult> GetPostTags(int postId, [FromQuery] int pageIndex = 1, [FromQuery] int pageSize = 10)
     {
-      var postExists = await _context.Posts.AnyAsync(p => p.Id == postId);
-      if (!postExists)
-      {
-        return NotFound(new { message = "Publicación no encontrada" });
-      }
+        var postExists = await _context.Posts.AsNoTracking().AnyAsync(p => p.Id == postId);
+        if (!postExists)
+        {
+            return NotFound(new { message = "Publicación no encontrada" });
+        }
 
-      var postTags = await _context.PostTags
-          .Where(pt => pt.PostId == postId)
-          .Include(pt => pt.Tag) // Include Tag data
-          .Select(pt => new
-          {
-            TagId = pt.TagId,
-            TagTitle = pt.Tag.Title, // Access Tag properties
-            CreatedBy = pt.CreatedBy,
-            CreatedDate = pt.CreatedDate,
-            LastUpdate = pt.LastUpdate
-          })
-          .ToListAsync();
+        var paginatedPostTags = await _context.PostTags
+            .AsNoTracking()
+            .Where(pt => pt.PostId == postId)
+            .OrderBy(pt => pt.Tag.Title) // Ordenar alfabéticamente por título de etiqueta
+            .Select(pt => new
+            {
+                TagId = pt.TagId,
+                TagTitle = pt.Tag.Title,
+                CreatedBy = pt.CreatedBy,
+                CreatedDate = pt.CreatedDate,
+                LastUpdate = pt.LastUpdate
+            })
+            .ToPaginatedListAsync(pageIndex, pageSize);
 
-      return Ok(new { data = postTags });
+        return Ok(new 
+        { 
+            data = paginatedPostTags.Items,
+            pageIndex = paginatedPostTags.PageIndex,
+            pageSize = paginatedPostTags.PageSize,
+            totalCount = paginatedPostTags.TotalCount,
+            totalPages = paginatedPostTags.TotalPages,
+            hasPreviousPage = paginatedPostTags.HasPreviousPage,
+            hasNextPage = paginatedPostTags.HasNextPage
+        });
     }
 
     // GET: api/Tag/{tagId}/posts

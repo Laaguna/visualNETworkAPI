@@ -3,7 +3,7 @@ services:
   # Servicio de backend en .NET
   backend:
     build:
-      context: ./visualNetworkAPI
+      context: ./VisualNetworkAPI
       dockerfile: Dockerfile
     container_name: visualnetwork-api
     restart: always

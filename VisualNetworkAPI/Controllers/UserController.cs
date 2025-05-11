@@ -4,6 +4,7 @@ using VisualNetworkAPI.Models;
 using Microsoft.AspNetCore.Authorization;
 using VisualNetworkAPI.Models.DTOs;
 using VisualNetworkAPI.Models.DTOs.Board;
+using VisualNetworkAPI.Paginated;
 
 namespace VisualNetworkAPI.Controllers
 {
@@ -247,124 +248,196 @@ namespace VisualNetworkAPI.Controllers
     }
 
     [HttpGet("{userId}/boards")]
-    public async Task<IActionResult> GetUserBoards(int userId)
+public async Task<IActionResult> GetUserBoards(int userId, [FromQuery] int pageIndex = 1, [FromQuery] int pageSize = 10)
+{
+    // Verificar si el usuario existe
+    var userExists = await _context.Users
+        .AsNoTracking()
+        .AnyAsync(u => u.Id == userId);
+        
+    if (!userExists)
     {
-      var userExists = await _context.Users.AnyAsync(u => u.Id == userId);
-      if (!userExists)
-      {
         return NotFound(new { message = "Usuario no encontrado" });
-      }
-
-      var userBoards = await _context.Boards
+    }
+    
+    // Aplicar filtro y paginación
+    var paginatedUserBoards = await _context.Boards
+        .AsNoTracking()
         .Where(p => p.CreatedBy == userId.ToString())
+        .OrderByDescending(p => p.CreatedDate) // Ordenamiento consistente
         .Select(p => new PublicBoardDTO
         {
-          Id = p.Id,
-          Description = p.Description,
-          Decoration = p.Decoration,
-          CreatedDate = p.CreatedDate,
-          LastUpdate = p.LastUpdate,
-        }).ToListAsync();
-
-      return Ok(new { data = userBoards });
-    }
+            Id = p.Id,
+            Description = p.Description,
+            Decoration = p.Decoration,
+            CreatedDate = p.CreatedDate,
+            LastUpdate = p.LastUpdate,
+        })
+        .ToPaginatedListAsync(pageIndex, pageSize);
+    
+    // Retornar datos paginados con metadatos de paginación
+    return Ok(new 
+    { 
+        data = paginatedUserBoards.Items,
+        pageIndex = paginatedUserBoards.PageIndex,
+        pageSize = paginatedUserBoards.PageSize,
+        totalCount = paginatedUserBoards.TotalCount,
+        totalPages = paginatedUserBoards.TotalPages,
+        hasPreviousPage = paginatedUserBoards.HasPreviousPage,
+        hasNextPage = paginatedUserBoards.HasNextPage
+    });
+}
 
     [HttpGet("{id}/followers")]
-    public async Task<IActionResult> GetUserFollowers(int id)
+    public async Task<IActionResult> GetUserFollowers(int id, [FromQuery] int pageIndex = 1, [FromQuery] int pageSize = 10)
     {
-      var userExists = await _context.Users.AnyAsync(u => u.Id == id);
-      if (!userExists)
-      {
-        return NotFound(new { message = "Usuario no encontrado" });
-      }
-
-      var followerIds = await _context.Followers
-          .Where(f => f.FollowedId == id)
-          .Select(f => f.FollowerId)
-          .ToListAsync();
-
-      var followersData = new List<object>();
-      foreach (var followerId in followerIds)
-      {
-        var follower = await _context.Users.FindAsync(followerId);
-        if (follower != null)
+        // Verificar si el usuario existe
+        var userExists = await _context.Users.AsNoTracking().AnyAsync(u => u.Id == id);
+        if (!userExists)
         {
-          followersData.Add(new
-          {
-            Follower = new UserPublicDto
-            {
-              Id = follower.Id,
-              User = follower.User1,
-              Email = follower.Email,
-              FirstName = follower.FirstName,
-              LastName = follower.LastName,
-              DateBirth = follower.DateBirth,
-              Active = follower.Active,
-              Phone = follower.Phone,
-              Address = follower.Address,
-              Genre = follower.Genre,
-              CreatedBy = follower.CreatedBy,
-              CreatedDate = follower.CreatedDate,
-              LastUpdate = follower.LastUpdate
-            },
-            FollowDate = await _context.Followers
-                  .Where(f => f.FollowerId == followerId && f.FollowedId == id)
-                  .Select(f => f.FollowDate)
-                  .FirstOrDefaultAsync()
-          });
+            return NotFound(new { message = "Usuario no encontrado" });
         }
-      }
-
-      return Ok(new { data = followersData });
+        
+        // Consulta optimizada para paginación
+        var followersQuery = _context.Followers
+            .AsNoTracking()
+            .Where(f => f.FollowedId == id)
+            .OrderByDescending(f => f.FollowDate)
+            .Select(f => new { 
+                FollowerId = f.FollowerId, 
+                FollowDate = f.FollowDate 
+            });
+        
+        // Aplicar paginación
+        var paginatedFollowers = await followersQuery.ToPaginatedListAsync(pageIndex, pageSize);
+        
+        if (!paginatedFollowers.Items.Any())
+        {
+            return Ok(new 
+            { 
+                data = new List<object>(),
+                pageIndex = paginatedFollowers.PageIndex,
+                pageSize = paginatedFollowers.PageSize,
+                totalCount = paginatedFollowers.TotalCount,
+                totalPages = paginatedFollowers.TotalPages,
+                hasPreviousPage = paginatedFollowers.HasPreviousPage,
+                hasNextPage = paginatedFollowers.HasNextPage
+            });
+        }
+        
+        // Extraer IDs de los seguidores para obtener sus datos en una sola consulta
+        var followerIds = paginatedFollowers.Items.Select(f => f.FollowerId).ToList();
+        
+        // Cargar todos los usuarios en una sola consulta
+        var users = await _context.Users
+            .AsNoTracking()
+            .Where(u => followerIds.Contains(u.Id))
+            .Select(u => new PublicUserRelationDTO
+            {
+                Id = u.Id,
+                Avatar = u.Avatar,
+                FirstName = u.FirstName,
+                LastName = u.LastName,
+                User1 = u.User1
+            })
+            .ToDictionaryAsync(u => u.Id);
+        
+        // Combinar datos de seguidores con sus fechas de seguimiento
+        var followersData = paginatedFollowers.Items
+            .Where(f => users.ContainsKey(f.FollowerId))
+            .Select(f => new
+            {
+                Follower = users[f.FollowerId],
+                FollowDate = f.FollowDate
+            })
+            .ToList();
+        
+        return Ok(new 
+        { 
+            data = followersData,
+            pageIndex = paginatedFollowers.PageIndex,
+            pageSize = paginatedFollowers.PageSize,
+            totalCount = paginatedFollowers.TotalCount,
+            totalPages = paginatedFollowers.TotalPages,
+            hasPreviousPage = paginatedFollowers.HasPreviousPage,
+            hasNextPage = paginatedFollowers.HasNextPage
+        });
     }
 
     [HttpGet("{id}/following")]
-    public async Task<IActionResult> GetUserFollowing(int id)
+    public async Task<IActionResult> GetUserFollowing(int id, [FromQuery] int pageIndex = 1, [FromQuery] int pageSize = 10)
     {
-      var userExists = await _context.Users.AnyAsync(u => u.Id == id);
-      if (!userExists)
-      {
-        return NotFound(new { message = "Usuario no encontrado" });
-      }
-
-      var followingIds = await _context.Followers
-          .Where(f => f.FollowerId == id)
-          .Select(f => f.FollowedId)
-          .ToListAsync();
-
-      var followingData = new List<object>();
-      foreach (var followingId in followingIds)
-      {
-        var followedUser = await _context.Users.FindAsync(followingId);
-        if (followedUser != null)
+        // Verificar si el usuario existe
+        var userExists = await _context.Users.AsNoTracking().AnyAsync(u => u.Id == id);
+        if (!userExists)
         {
-          followingData.Add(new
-          {
-            Following = new UserPublicDto
-            {
-              Id = followedUser.Id,
-              User = followedUser.User1,
-              Email = followedUser.Email,
-              FirstName = followedUser.FirstName,
-              LastName = followedUser.LastName,
-              DateBirth = followedUser.DateBirth,
-              Active = followedUser.Active,
-              Phone = followedUser.Phone,
-              Address = followedUser.Address,
-              Genre = followedUser.Genre,
-              CreatedBy = followedUser.CreatedBy,
-              CreatedDate = followedUser.CreatedDate,
-              LastUpdate = followedUser.LastUpdate
-            },
-            FollowDate = await _context.Followers
-                  .Where(f => f.FollowerId == id && f.FollowedId == followingId)
-                  .Select(f => f.FollowDate)
-                  .FirstOrDefaultAsync()
-          });
+            return NotFound(new { message = "Usuario no encontrado" });
         }
-      }
-
-      return Ok(new { data = followingData });
+        
+        // Consulta optimizada para paginación
+        var followingQuery = _context.Followers
+            .AsNoTracking()
+            .Where(f => f.FollowerId == id)
+            .OrderByDescending(f => f.FollowDate)
+            .Select(f => new { 
+                FollowedId = f.FollowedId, 
+                FollowDate = f.FollowDate 
+            });
+        
+        // Aplicar paginación
+        var paginatedFollowing = await followingQuery.ToPaginatedListAsync(pageIndex, pageSize);
+        
+        if (!paginatedFollowing.Items.Any())
+        {
+            return Ok(new 
+            { 
+                data = new List<object>(),
+                pageIndex = paginatedFollowing.PageIndex,
+                pageSize = paginatedFollowing.PageSize,
+                totalCount = paginatedFollowing.TotalCount,
+                totalPages = paginatedFollowing.TotalPages,
+                hasPreviousPage = paginatedFollowing.HasPreviousPage,
+                hasNextPage = paginatedFollowing.HasNextPage
+            });
+        }
+        
+        // Extraer IDs de los usuarios seguidos para obtener sus datos en una sola consulta
+        var followedIds = paginatedFollowing.Items.Select(f => f.FollowedId).ToList();
+        
+        // Cargar todos los usuarios en una sola consulta
+        var users = await _context.Users
+            .AsNoTracking()
+            .Where(u => followedIds.Contains(u.Id))
+            .Select(u => new PublicUserRelationDTO
+            {
+                Id = u.Id,
+                Avatar = u.Avatar,
+                FirstName = u.FirstName,
+                LastName = u.LastName,
+                User1 = u.User1
+            })
+            .ToDictionaryAsync(u => u.Id);
+        
+        // Combinar datos de usuarios seguidos con sus fechas de seguimiento
+        var followingData = paginatedFollowing.Items
+            .Where(f => users.ContainsKey(f.FollowedId))
+            .Select(f => new
+            {
+                Following = users[f.FollowedId],
+                FollowDate = f.FollowDate
+            })
+            .ToList();
+        
+        return Ok(new 
+        { 
+            data = followingData,
+            pageIndex = paginatedFollowing.PageIndex,
+            pageSize = paginatedFollowing.PageSize,
+            totalCount = paginatedFollowing.TotalCount,
+            totalPages = paginatedFollowing.TotalPages,
+            hasPreviousPage = paginatedFollowing.HasPreviousPage,
+            hasNextPage = paginatedFollowing.HasNextPage
+        });
     }
 
     [HttpPost("{id}/followers")]
@@ -437,48 +510,66 @@ namespace VisualNetworkAPI.Controllers
     }
 
     [HttpGet("{id}/liked-posts")]
-    public async Task<IActionResult> GetUserLikedPosts(int id)
+    public async Task<IActionResult> GetUserLikedPosts(int id, [FromQuery] int pageIndex = 1, [FromQuery] int pageSize = 10)
     {
-      var userExists = await _context.Users.AnyAsync(u => u.Id == id);
-      if (!userExists)
-      {
-        return NotFound(new { message = "Usuario no encontrado" });
-      }
-
-      var likedPostIds = await _context.LikePosts
-          .Where(lp => lp.UserId == id)
-          .Select(lp => lp.PostId)
-          .ToListAsync();
-
-      var likedPostsData = new List<object>();
-      foreach (var postId in likedPostIds)
-      {
-        var post = await _context.Posts.FindAsync(postId);
-        if (post != null)
+        var userExists = await _context.Users.AsNoTracking().AnyAsync(u => u.Id == id);
+        if (!userExists)
         {
-          likedPostsData.Add(new
-          {
-            Post = new Post
-            {
-              Id = post.Id,
-              Title = post.Title,
-              Description = post.Description,
-              PostTags = post.PostTags,
-              ImageUrls = post.ImageUrls,
-              JsonPersonalizacion = post.JsonPersonalizacion,
-              CreatedBy = post.CreatedBy,
-              CreatedDate = post.CreatedDate,
-              LastUpdate = post.LastUpdate
-            },
-            LikedDate = await _context.LikePosts
-                  .Where(lp => lp.UserId == id && lp.PostId == postId)
-                  .Select(lp => lp.CreatedDate)
-                  .FirstOrDefaultAsync()
-          });
+            return NotFound(new { message = "Usuario no encontrado" });
         }
-      }
 
-      return Ok(new { data = likedPostsData });
+        // Consulta optimizada para obtener los likes paginados
+        var likedPostsQuery = _context.LikePosts
+            .AsNoTracking()
+            .Where(lp => lp.UserId == id)
+            .OrderByDescending(lp => lp.CreatedDate)
+            .Select(lp => new { LikePost = lp, PostId = lp.PostId });
+
+        var paginatedLikes = await likedPostsQuery.ToPaginatedListAsync(pageIndex, pageSize);
+        
+        // Extraer los IDs de los posts para hacer una sola consulta
+        var postIds = paginatedLikes.Items.Select(lp => lp.PostId).ToList();
+        
+        // Cargar todos los posts en una sola consulta
+        var posts = await _context.Posts
+            .AsNoTracking()
+            .Where(p => postIds.Contains(p.Id))
+            .ToDictionaryAsync(p => p.Id);
+        
+        // Mapear los resultados
+        var likedPostsData = paginatedLikes.Items
+            .Where(lp => posts.ContainsKey(lp.PostId))
+            .Select(lp => 
+            {
+                var post = posts[lp.PostId];
+                return new
+                {
+                    Post = new 
+                    {
+                        Id = post.Id,
+                        Title = post.Title,
+                        Description = post.Description,
+                        PostTags = post.PostTags,
+                        ImageUrls = post.ImageUrls,
+                        JsonPersonalizacion = post.JsonPersonalizacion,
+                        CreatedBy = post.CreatedBy,
+                        CreatedDate = post.CreatedDate,
+                        LastUpdate = post.LastUpdate
+                    },
+                    LikedDate = lp.LikePost.CreatedDate
+                };
+            }).ToList();
+
+        return Ok(new 
+        { 
+            data = likedPostsData,
+            pageIndex = paginatedLikes.PageIndex,
+            pageSize = paginatedLikes.PageSize,
+            totalCount = paginatedLikes.TotalCount,
+            totalPages = paginatedLikes.TotalPages,
+            hasPreviousPage = paginatedLikes.HasPreviousPage,
+            hasNextPage = paginatedLikes.HasNextPage
+        });
     }
   }
 }
