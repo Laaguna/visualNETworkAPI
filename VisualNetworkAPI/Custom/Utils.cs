@@ -38,8 +38,10 @@ namespace VisualNetworkAPI.Custom
       //Crear información del usuario para el token
       var userClaims = new[]
       {
+        //TODO:
+        // Quitar el email
+
         new Claim(ClaimTypes.NameIdentifier, modelo.Id.ToString()),
-        new Claim(ClaimTypes.Email, modelo.Email)
       };
 
       var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:key"]!));
